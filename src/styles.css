@@ -1,0 +1,186 @@
+:root {
+	color-scheme: light dark;
+	font-family:
+		ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+	background: var(--grouped-bg);
+	color: var(--text);
+	--grouped-bg: #f2f2f7;
+	--secondary-grouped-bg: #ffffff;
+	--tertiary-grouped-bg: #e5e5ea;
+	--text: #111113;
+	--muted-text: #6e6e73;
+	--separator: rgba(60, 60, 67, 0.18);
+	--dot-inactive: rgb(209, 209, 214);
+	--red: #ff3b30;
+	--yellow: #ffd60a;
+	--green: #34c759;
+	--blue: #007aff;
+	--gray: #8e8e93;
+	--panel-shadow: rgba(0, 0, 0, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--grouped-bg: #000000;
+		--secondary-grouped-bg: #1c1c1e;
+		--tertiary-grouped-bg: #2c2c2e;
+		--text: #ffffff;
+		--muted-text: #98989f;
+		--separator: rgba(84, 84, 88, 0.65);
+		--dot-inactive: rgb(58, 58, 60);
+		--panel-shadow: rgba(0, 0, 0, 0.5);
+	}
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+	min-height: 100%;
+	margin: 0;
+}
+
+body {
+	min-height: 100dvh;
+	overflow: hidden;
+	touch-action: manipulation;
+	-webkit-font-smoothing: antialiased;
+}
+
+button {
+	border: 0;
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+button:disabled {
+	cursor: default;
+}
+
+.u-flex {
+	display: flex;
+}
+
+.u-grid {
+	display: grid;
+}
+
+.u-flex-column {
+	flex-direction: column;
+}
+
+.u-items-center {
+	align-items: center;
+}
+
+.u-items-end {
+	align-items: flex-end;
+}
+
+.u-justify-center {
+	justify-content: center;
+}
+
+.u-justify-between {
+	justify-content: space-between;
+}
+
+.u-place-center {
+	place-items: center;
+}
+
+.u-content-center {
+	align-content: center;
+}
+
+.u-justify-items-center {
+	justify-items: center;
+}
+
+.u-gap-4 {
+	gap: 4px;
+}
+
+.u-gap-8 {
+	gap: 8px;
+}
+
+.u-gap-10 {
+	gap: 10px;
+}
+
+.u-gap-12 {
+	gap: 12px;
+}
+
+.u-gap-14 {
+	gap: 14px;
+}
+
+.u-text-left {
+	text-align: left;
+}
+
+.u-text-center {
+	text-align: center;
+}
+
+.u-text-right {
+	text-align: right;
+}
+
+.panel-content {
+	position: relative;
+	height: calc(100% - 15px);
+	overflow: auto;
+	padding: 0 2px 10px;
+}
+
+.panel-section {
+	margin-bottom: 18px;
+}
+
+.panel-section h2,
+.panel-section h3,
+.panel-title {
+	margin: 0 0 10px;
+	font-size: 18px;
+	font-weight: 700;
+}
+
+.panel-section h3 {
+	font-size: 15px;
+	color: var(--muted-text);
+}
+
+.subtext {
+	min-height: 20px;
+	margin: 6px 0 0;
+	color: var(--muted-text);
+	font-size: 14px;
+}
+
+.primary-button {
+	width: 100%;
+	min-height: 52px;
+	border-radius: 8px;
+	color: #ffffff;
+	font-weight: 800;
+}
+
+.primary-button:disabled {
+	opacity: 0.45;
+}
+
+.primary-button--red {
+	background: var(--red);
+}
+
+.primary-button--green {
+	background: var(--green);
+}
