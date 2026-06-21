@@ -1,12 +1,14 @@
-import { readFileSync }       from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath, URL } from 'node:url';
 
 import vue              from '@vitejs/plugin-vue';
 import { defineConfig } from 'vite';
 import { VitePWA }      from 'vite-plugin-pwa';
 
-const localTlsCertificate = readFileSync(fileURLToPath(new URL('./tomas.houseoftovig.com.pem', import.meta.url)));
-const buildTimestamp      = new Date().toISOString();
+const localTlsCertificatePath = fileURLToPath(new URL('./tomas.houseoftovig.com.pem', import.meta.url));
+const localTlsCertificate     = existsSync(localTlsCertificatePath) ? readFileSync(localTlsCertificatePath) : undefined;
+const localHttpsConfig        = localTlsCertificate ? { key : localTlsCertificate, cert : localTlsCertificate } : undefined;
+const buildTimestamp          = new Date().toISOString();
 
 export default defineConfig({
 	define : {
@@ -66,18 +68,12 @@ export default defineConfig({
 	server : {
 		host  : '0.0.0.0',
 		port  : 5175,
-		https : {
-			key  : localTlsCertificate,
-			cert : localTlsCertificate,
-		},
+		https : localHttpsConfig,
 	},
 	preview : {
 		host  : '0.0.0.0',
 		port  : 5175,
-		https : {
-			key  : localTlsCertificate,
-			cert : localTlsCertificate,
-		},
+		https : localHttpsConfig,
 	},
 	test : {
 		environment : 'jsdom',

@@ -52,7 +52,9 @@ The Vite dev server is configured to run on:
 https://localhost:5175
 ```
 
-The server uses `tomas.houseoftovig.com.pem` as both the HTTPS key and certificate. Because this is a local certificate, your browser may ask you to trust or accept it before loading the app.
+If `tomas.houseoftovig.com.pem` exists locally, Vite uses it as both the HTTPS key and certificate. Because this is a local certificate, your browser may ask you to trust or accept it before loading the app.
+
+If the PEM file is missing, Vite starts without local HTTPS. This keeps CI and hosting builds, such as Cloudflare Pages, from failing when the local-only certificate is not available.
 
 ## Build
 
@@ -67,6 +69,19 @@ vue-tsc --noEmit && vite build
 ```
 
 Build output is written to `dist/`.
+
+## Deploy on Cloudflare Pages
+
+Cloudflare Pages should build the static Vite app and serve the generated `dist/` directory.
+
+Use these build settings:
+
+```text
+Build command: npm run build
+Build output directory: dist
+```
+
+Do not commit `tomas.houseoftovig.com.pem` or configure Cloudflare to use it. Cloudflare provides TLS for the deployed site at the edge, so the local PEM is only for local development.
 
 ## Preview the Production Build
 
