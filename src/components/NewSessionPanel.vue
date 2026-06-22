@@ -187,7 +187,7 @@ export default toNative(NewSessionPanel);
 
 <style scoped>
 .panel-content--new-session {
-	padding-bottom: max(10px, env(safe-area-inset-bottom));
+	padding-bottom: calc(70px + env(safe-area-inset-bottom));
 }
 
 .new-session-start {
