@@ -15,15 +15,7 @@
 				<h2 class="u-text-center">
 					{{ title }}
 				</h2>
-				<button
-					class="settings-refresh-button u-grid u-place-center"
-					type="button"
-					aria-label="Refresh app"
-					:disabled="refreshingApp"
-					@click.stop="refreshApp"
-				>
-					<RefreshCw :size="20" />
-				</button>
+				<span class="settings-header__spacer" />
 			</header>
 
 			<Transition :name="transitionName" mode="out-in">
@@ -47,6 +39,16 @@
 						<span>Share</span>
 						<strong>QR Code</strong>
 						<ChevronRight :size="20" aria-hidden="true" />
+					</button>
+					<button
+						class="settings-row settings-row--status u-grid u-items-center u-gap-8 u-text-left"
+						:class="{ 'settings-row--available' : versionUpdateStatus === 'available' }"
+						type="button"
+						:disabled="refreshingApp"
+						@click="handleVersionUpdateClick"
+					>
+						<span>Version Update</span>
+						<strong>{{ versionUpdateLabel }}</strong>
 					</button>
 				</div>
 
@@ -90,23 +92,6 @@
 				</div>
 
 				<div v-else-if="page === 'graphics'" key="graphics" class="settings-page u-grid u-gap-12">
-					<label class="field-label">Dot Colour Style</label>
-					<div class="segmented u-grid u-gap-4" role="group" aria-label="Dot Colour Style">
-						<button
-							type="button"
-							:class="{ active : store.dotColorStyle.value === 'solid' }"
-							@click="store.setDotColorStyle('solid')"
-						>
-							Solid
-						</button>
-						<button
-							type="button"
-							:class="{ active : store.dotColorStyle.value === 'gradient' }"
-							@click="store.setDotColorStyle('gradient')"
-						>
-							Gradient
-						</button>
-					</div>
 					<label class="field-label">Timer Position</label>
 					<div class="segmented u-grid u-gap-4" role="group" aria-label="Timer Position">
 						<button
@@ -192,21 +177,21 @@
 </template>
 
 <script lang="ts">
-import { CheckCircle2, ChevronLeft, ChevronRight, Plus, RefreshCw, XCircle } from '@lucide/vue';
+import { CheckCircle2, ChevronLeft, ChevronRight, Plus, XCircle } from '@lucide/vue';
 import { markRaw } from 'vue';
-import { Component, Emit, Prop, toNative, Vue, Watch }                       from 'vue-facing-decorator';
+import { Component, Emit, Prop, toNative, Vue, Watch }            from 'vue-facing-decorator';
 
 import DialSelector      from '@/components/widgets/DialSelector.vue';
 import PanelShell        from '@/components/widgets/PanelShell.vue';
-import { formatDosage, SUPPORTED_INCREMENT_HUNDREDTHS } from '@/domain/dosage';
-import { refreshPwa }    from '@/pwa';
+import { formatDosage, SUPPORTED_INCREMENT_HUNDREDTHS }             from '@/domain/dosage';
+import { checkVersionUpdate, refreshPwa, type VersionUpdateStatus } from '@/pwa';
 import { useTimerStore } from '@/store/useTimerStore';
 
 /**
  * Owns the settings flows for defaults, graphics, install status, and app sharing.
  */
 @Component({
-	components : { CheckCircle2, ChevronLeft, ChevronRight, DialSelector, PanelShell, Plus, RefreshCw, XCircle },
+	components : { CheckCircle2, ChevronLeft, ChevronRight, DialSelector, PanelShell, Plus, XCircle },
 	emits      : [ 'close', 'interact' ],
 })
 class SettingsPanel extends Vue {
@@ -228,6 +213,7 @@ class SettingsPanel extends Vue {
 	offlineCheckComplete = false;
 	offlineStatusDetail  = '';
 	refreshingApp        = false;
+	versionUpdateStatus: VersionUpdateStatus = 'unknown';
 
 	get title(): string {
 		return {
@@ -241,11 +227,7 @@ class SettingsPanel extends Vue {
 	}
 
 	get graphicsLabel(): string {
-		return `${this.colorStyleLabel}, ${this.timerPositionLabel}`;
-	}
-
-	get colorStyleLabel(): string {
-		return this.store.dotColorStyle.value === 'solid' ? 'Solid' : 'Gradient';
+		return this.timerPositionLabel;
 	}
 
 	get timerPositionLabel(): string {
@@ -296,9 +278,20 @@ class SettingsPanel extends Vue {
 			.format(new Date(import.meta.env.VITE_BUILD_TIMESTAMP));
 	}
 
+	get versionUpdateLabel(): string {
+		if (this.versionUpdateStatus === 'available') {
+			return 'Available';
+		}
+		if (this.versionUpdateStatus === 'up-to-date') {
+			return 'Up-to-Date';
+		}
+		return 'Unknown';
+	}
+
 	mounted(): void {
 		this.refreshStandaloneState();
 		void this.refreshOfflineState();
+		void this.refreshVersionUpdateStatus();
 		window.addEventListener('beforeinstallprompt', this.onBeforeInstallPrompt as EventListener);
 		window.addEventListener('appinstalled', this.onAppInstalled);
 	}
@@ -314,6 +307,7 @@ class SettingsPanel extends Vue {
 			this.page = 'main';
 			this.refreshStandaloneState();
 			void this.refreshOfflineState();
+			void this.refreshVersionUpdateStatus();
 		}
 	}
 
@@ -323,14 +317,24 @@ class SettingsPanel extends Vue {
 	@Emit('interact')
 	interact(): void {}
 
-	async refreshApp(): Promise<void> {
+	async handleVersionUpdateClick(): Promise<void> {
 		if (this.refreshingApp) {
+			return;
+		}
+
+		if (this.versionUpdateStatus !== 'available') {
+			await this.refreshVersionUpdateStatus();
 			return;
 		}
 
 		this.refreshingApp = true;
 		this.interact();
 		await refreshPwa();
+	}
+
+	async refreshVersionUpdateStatus(): Promise<void> {
+		const updateCheck        = await checkVersionUpdate();
+		this.versionUpdateStatus = updateCheck.status;
 	}
 
 	openPage(nextPage: Page): void {
@@ -491,18 +495,6 @@ export default toNative(SettingsPanel);
 	width: 44px;
 }
 
-.settings-refresh-button {
-	width: 44px;
-	height: 38px;
-	border-radius: 8px;
-	background: color-mix(in srgb, var(--blue), transparent 86%);
-	color: var(--blue);
-}
-
-.settings-refresh-button:disabled {
-	opacity: 0.35;
-}
-
 .settings-build-stamp {
 	margin: 14px 0 0;
 	color: var(--muted-text);
@@ -525,6 +517,14 @@ export default toNative(SettingsPanel);
 
 .settings-row svg {
 	color: var(--muted-text);
+}
+
+.settings-row--status {
+	grid-template-columns: 1fr auto;
+}
+
+.settings-row--available strong {
+	color: var(--green);
 }
 
 .install-page {

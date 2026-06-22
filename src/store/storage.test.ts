@@ -12,14 +12,12 @@ describe('storage', () => {
 		localStorage.setItem(STORAGE_KEYS.dosageIncrementHundredths, '25');
 		localStorage.setItem(STORAGE_KEYS.maxUnitHundredths, '110');
 		localStorage.setItem(STORAGE_KEYS.defaultUnitHundredths, '124');
-		localStorage.setItem(STORAGE_KEYS.dotColorStyle, 'solid');
 		localStorage.setItem(STORAGE_KEYS.timerPosition, 'center');
 
 		expect(loadState()).toMatchObject({
 			dosageIncrementHundredths : 25,
 			maxUnitHundredths         : 100,
 			defaultUnitHundredths     : 100,
-			dotColorStyle             : 'solid',
 			timerPosition             : 'center',
 		});
 	});

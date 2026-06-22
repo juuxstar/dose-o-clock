@@ -4,7 +4,6 @@
 			<DotRingTimer
 				:elapsed-seconds="store.visualElapsedSeconds.value"
 				:duration-seconds="store.activeSession.value?.durationSeconds"
-				:color-style="store.dotColorStyle.value"
 			/>
 		</section>
 

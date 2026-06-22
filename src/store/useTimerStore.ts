@@ -4,7 +4,7 @@ import {
 	generateDosageValues, generateMaxDosageValues, normalizeIncrement, snapDefaultDosage, snapMaxDosage
 } from '@/domain/dosage';
 import { TimerSession } from '@/domain/TimerSession';
-import { type DotColorStyle, loadState, removeSessionData, saveActiveSession, saveHistory, saveSetting, type TimerPosition } from '@/store/storage';
+import { loadState, removeSessionData, saveActiveSession, saveHistory, saveSetting, type TimerPosition } from '@/store/storage';
 
 const initialState = loadState();
 
@@ -13,7 +13,6 @@ const history                   = ref<TimerSession[]>(initialState.history);
 const defaultUnitHundredths     = ref(initialState.defaultUnitHundredths);
 const maxUnitHundredths         = ref(initialState.maxUnitHundredths);
 const dosageIncrementHundredths = ref(initialState.dosageIncrementHundredths);
-const dotColorStyle             = ref<DotColorStyle>(initialState.dotColorStyle);
 const timerPosition             = ref<TimerPosition>(initialState.timerPosition);
 const currentTime               = ref(new Date());
 
@@ -88,11 +87,6 @@ export function useTimerStore() {
 		saveSetting('defaultUnitHundredths', defaultUnitHundredths.value);
 	}
 
-	function setDotColorStyle(value: DotColorStyle): void {
-		dotColorStyle.value = value;
-		saveSetting('dotColorStyle', value);
-	}
-
 	function setTimerPosition(value: TimerPosition): void {
 		timerPosition.value = value;
 		saveSetting('timerPosition', value);
@@ -110,7 +104,6 @@ export function useTimerStore() {
 		defaultUnitHundredths,
 		maxUnitHundredths,
 		dosageIncrementHundredths,
-		dotColorStyle,
 		timerPosition,
 		dosageValues,
 		maxDosageValues,
@@ -124,7 +117,6 @@ export function useTimerStore() {
 		setDefaultDosage,
 		setMaxDosage,
 		setDosageIncrement,
-		setDotColorStyle,
 		setTimerPosition,
 	};
 }

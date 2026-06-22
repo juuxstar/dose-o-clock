@@ -1,12 +1,13 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath, URL }       from 'node:url';
 
-import vue              from '@vitejs/plugin-vue';
-import { defineConfig } from 'vite';
-import { VitePWA }      from 'vite-plugin-pwa';
+import vue                           from '@vitejs/plugin-vue';
+import { defineConfig, type Plugin } from 'vite';
+import { VitePWA }                   from 'vite-plugin-pwa';
 
 const localTlsCertificatePath = fileURLToPath(new URL('./tomas.houseoftovig.com.pem', import.meta.url));
 const buildTimestamp          = new Date().toISOString();
+const appVersion              = JSON.parse(readFileSync(fileURLToPath(new URL('./package.json', import.meta.url)), 'utf8')).version as string;
 
 export default defineConfig(({ command, mode }) => {
 	const useLocalHttps       = command === 'serve' && mode === 'development';
@@ -17,6 +18,7 @@ export default defineConfig(({ command, mode }) => {
 
 	return {
 		define : {
+			'import.meta.env.VITE_APP_VERSION'     : JSON.stringify(appVersion),
 			'import.meta.env.VITE_BUILD_TIMESTAMP' : JSON.stringify(buildTimestamp),
 		},
 		esbuild : {
@@ -29,6 +31,7 @@ export default defineConfig(({ command, mode }) => {
 		},
 		plugins : [
 			vue(),
+			appVersionManifestPlugin(),
 			VitePWA({
 				cleanupOutdatedCaches : true,
 				injectRegister        : false,
@@ -85,3 +88,28 @@ export default defineConfig(({ command, mode }) => {
 		},
 	};
 });
+
+function appVersionManifestPlugin(): Plugin {
+	return {
+		name : 'dose-o-clock-app-version-manifest',
+		configureServer(server) {
+			server.middlewares.use((request, response, next) => {
+				if (request.url?.startsWith('/app-version.json')) {
+					response.setHeader('Cache-Control', 'no-store');
+					response.setHeader('Content-Type', 'application/json');
+					response.end(getAppVersionManifest());
+					return;
+				}
+
+				next();
+			});
+		},
+		generateBundle() {
+			this.emitFile({ type : 'asset', fileName : 'app-version.json', source : getAppVersionManifest() });
+		},
+	};
+}
+
+function getAppVersionManifest(): string {
+	return `${JSON.stringify({ version : appVersion, buildTimestamp })}\n`;
+}

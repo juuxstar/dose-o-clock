@@ -1,8 +1,9 @@
 import './styles.css';
-import './pwa';
 
 import { createApp } from 'vue';
 
-import App from './App.vue';
+import App                           from './App.vue';
+import { startVersionUpdateMonitor } from './pwa';
 
 createApp(App).mount('#app');
+startVersionUpdateMonitor();

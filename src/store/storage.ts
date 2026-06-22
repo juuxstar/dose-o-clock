@@ -8,7 +8,6 @@ import {
 } from '@/domain/dosage';
 import { TimerSession } from '@/domain/TimerSession';
 
-export type DotColorStyle = 'solid' | 'gradient'
 export type TimerPosition = 'top' | 'center'
 
 export interface PersistedState {
@@ -17,7 +16,6 @@ export interface PersistedState {
 	defaultUnitHundredths: number;
 	maxUnitHundredths: number;
 	dosageIncrementHundredths: number;
-	dotColorStyle: DotColorStyle;
 	timerPosition: TimerPosition;
 }
 
@@ -27,7 +25,6 @@ export const STORAGE_KEYS = {
 	defaultUnitHundredths     : 'dose-o-clock.default-unit-hundredths',
 	maxUnitHundredths         : 'dose-o-clock.max-unit-hundredths',
 	dosageIncrementHundredths : 'dose-o-clock.dosage-increment-hundredths',
-	dotColorStyle             : 'dose-o-clock.dot-color-style',
 	timerPosition             : 'dose-o-clock.timer-position',
 } as const;
 
@@ -44,7 +41,6 @@ export function loadState(now: Date = new Date()): PersistedState {
 		maxUnitHundredths,
 		dosageIncrementHundredths
 	);
-	const dotColorStyle = readDotColorStyle();
 	const timerPosition = readTimerPosition();
 	const activeSession = readSession(STORAGE_KEYS.activeSession);
 	const history       = readHistory();
@@ -57,20 +53,11 @@ export function loadState(now: Date = new Date()): PersistedState {
 			defaultUnitHundredths,
 			maxUnitHundredths,
 			dosageIncrementHundredths,
-			dotColorStyle,
 			timerPosition,
 		};
 	}
 
-	return {
-		activeSession,
-		history,
-		defaultUnitHundredths,
-		maxUnitHundredths,
-		dosageIncrementHundredths,
-		dotColorStyle,
-		timerPosition,
-	};
+	return { activeSession, history, defaultUnitHundredths, maxUnitHundredths, dosageIncrementHundredths, timerPosition };
 }
 
 export function saveActiveSession(session: TimerSession | null): void {
@@ -114,11 +101,6 @@ function readSession(key: string): TimerSession | null {
 function readHistory(): TimerSession[] {
 	const decoded = readJson(localStorage.getItem(STORAGE_KEYS.history));
 	return Array.isArray(decoded) ? decoded.filter(TimerSession.isTimerSession).map(session => TimerSession.from(session)) : [];
-}
-
-function readDotColorStyle(): DotColorStyle {
-	const value = localStorage.getItem(STORAGE_KEYS.dotColorStyle);
-	return value === 'solid' || value === 'gradient' ? value : 'gradient';
 }
 
 function readTimerPosition(): TimerPosition {
