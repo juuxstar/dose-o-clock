@@ -17,6 +17,14 @@ describe('TimerSession', () => {
 		expect(session.elapsedSeconds(new Date('2026-06-15T12:00:10.000Z'))).toBe(1810);
 	});
 
+	it('keeps visual elapsed time moving beyond the selected duration', () => {
+		const session = TimerSession.create(100, 0, new Date('2026-06-15T12:00:00.000Z'), 90 * 60);
+		const stopped = session.withAutomaticStop();
+
+		expect(stopped.elapsedSeconds(new Date('2026-06-15T15:00:00.000Z'))).toBe(90 * 60);
+		expect(stopped.visualElapsedSeconds(new Date('2026-06-15T15:00:00.000Z'))).toBe(3 * 60 * 60);
+	});
+
 	it('calculates automatic stop date from remaining elapsed time', () => {
 		const session = TimerSession.create(100, 30 * 60, new Date('2026-06-15T12:00:00.000Z'), 90 * 60);
 

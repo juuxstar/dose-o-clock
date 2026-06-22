@@ -12,6 +12,9 @@
 <script lang="ts">
 import { Component, Emit, Prop, toNative, Vue } from 'vue-facing-decorator';
 
+/**
+ * Provides the shared bottom-sheet container and backdrop behavior for app panels.
+ */
 @Component({ emits : [ 'close', 'interact' ] })
 class PanelShell extends Vue {
 

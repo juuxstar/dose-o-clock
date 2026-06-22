@@ -74,6 +74,13 @@ export class TimerSession {
 		return clamp(elapsed, 0, this.durationSeconds);
 	}
 
+	visualElapsedSeconds(now: Date = new Date()): number {
+		const started = new Date(this.startedAt);
+		const elapsed = (now.getTime() - started.getTime()) / 1000 + this.earlierOffsetSeconds;
+
+		return Math.max(0, elapsed);
+	}
+
 	automaticStopDate(): Date {
 		const started          = new Date(this.startedAt);
 		const remainingSeconds = Math.max(0, this.durationSeconds - this.earlierOffsetSeconds);

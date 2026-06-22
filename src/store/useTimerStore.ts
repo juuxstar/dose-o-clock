@@ -21,6 +21,7 @@ const dosageValues         = computed(() => generateDosageValues(maxUnitHundredt
 const maxDosageValues      = computed(() => generateMaxDosageValues(dosageIncrementHundredths.value));
 const hasSessionData       = computed(() => Boolean(activeSession.value) || history.value.length > 0);
 const activeElapsedSeconds = computed(() => activeSession.value?.elapsedSeconds(currentTime.value) ?? 0);
+const visualElapsedSeconds = computed(() => activeSession.value?.visualElapsedSeconds(currentTime.value) ?? 0);
 
 export function useTimerStore() {
 	function tick(now: Date = new Date()): void {
@@ -115,6 +116,7 @@ export function useTimerStore() {
 		maxDosageValues,
 		hasSessionData,
 		activeElapsedSeconds,
+		visualElapsedSeconds,
 		tick,
 		startSession,
 		deleteHistorySession,

@@ -2,7 +2,8 @@
 	<PanelShell :open="open" @close="$emit('close')" @interact="$emit('interact')">
 		<div class="panel-content">
 			<header class="history-header u-grid u-items-center">
-				<h2 class="panel-title history-title u-text-left">
+				<span class="history-header__spacer" />
+				<h2 class="panel-title history-title u-text-center">
 					History
 				</h2>
 				<button
@@ -22,7 +23,7 @@
 			</div>
 
 			<div v-else class="history-list u-grid u-gap-8">
-				<div v-for="row in sessions" :key="row.session.id" class="history-row-wrap">
+				<div v-for="(row, index) in sessions" :key="row.session.id" class="history-row-wrap">
 					<button
 						v-if="!row.active"
 						class="history-delete u-grid u-place-center"
@@ -34,7 +35,7 @@
 					</button>
 					<div
 						class="history-row u-grid u-items-center u-gap-12"
-						:class="{ 'history-row--revealed' : revealedId === row.session.id }"
+						:class="[ index === 0 ? 'history-row--recent' : '', { 'history-row--revealed' : revealedId === row.session.id } ]"
 						@pointerdown="onRowPointerDown($event, row.session.id, row.active)"
 					>
 						<span>{{ formatShortTime(row.session.startedAt) }}</span>
@@ -77,18 +78,15 @@ import { CircleHelp, Trash2, X } from '@lucide/vue';
 import { markRaw }               from 'vue';
 import { Component, Emit, Prop, toNative, Vue, Watch } from 'vue-facing-decorator';
 
-import PanelShell                          from '@/components/PanelShell.vue';
+import PanelShell                          from '@/components/widgets/PanelShell.vue';
 import { formatDosage }                    from '@/domain/dosage';
 import { formatDuration, formatShortTime } from '@/domain/format';
 import { TimerSession }                    from '@/domain/TimerSession';
 import { useTimerStore }                   from '@/store/useTimerStore';
 
-interface HistoryRow {
-	active: boolean;
-	elapsed: number;
-	session: TimerSession;
-}
-
+/**
+ * Displays previous timer sessions and supports lightweight history cleanup actions.
+ */
 @Component({ components : { CircleHelp, PanelShell, Trash2, X }, emits : [ 'close', 'interact' ] })
 class HistoryPanel extends Vue {
 
@@ -108,7 +106,7 @@ class HistoryPanel extends Vue {
 				{
 					session : this.store.activeSession.value,
 					active  : true,
-					elapsed : this.store.activeElapsedSeconds.value,
+					elapsed : this.store.visualElapsedSeconds.value,
 				},
 			]
 			: [];
@@ -205,6 +203,12 @@ class HistoryPanel extends Vue {
 
 }
 
+interface HistoryRow {
+	active: boolean;
+	elapsed: number;
+	session: TimerSession;
+}
+
 export default toNative(HistoryPanel);
 </script>
 
@@ -220,8 +224,12 @@ export default toNative(HistoryPanel);
 }
 
 .history-header {
-	grid-template-columns: 1fr 44px;
+	grid-template-columns: 44px 1fr 44px;
 	margin-bottom: 14px;
+}
+
+.history-header__spacer {
+	width: 44px;
 }
 
 .history-title {
@@ -282,6 +290,11 @@ export default toNative(HistoryPanel);
 	background: var(--tertiary-grouped-bg);
 	padding: 0 14px;
 	transition: transform 180ms ease;
+}
+
+.history-row--recent {
+	min-height: 64px;
+	font-size: 22px;
 }
 
 .history-row--revealed {

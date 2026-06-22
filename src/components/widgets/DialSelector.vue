@@ -27,21 +27,9 @@
 <script lang="ts">
 import { Component, Emit, Prop, Ref, toNative, Vue } from 'vue-facing-decorator';
 
-type ValueFormatter = (value: number) => string;
-
-interface VisibleItem {
-	index: number;
-	label: string;
-	offset: number;
-	visualDistance: number;
-	style: {
-		color: string | undefined;
-		opacity: number;
-		transform: string;
-	};
-	value: number;
-}
-
+/**
+ * Lets users scrub through a fixed set of numeric choices with touch-friendly momentum.
+ */
 @Component({ emits : [ 'update:modelValue', 'interact' ] })
 class DialSelector extends Vue {
 
@@ -304,6 +292,21 @@ class DialSelector extends Vue {
 		return Math.min(Math.max(value, minimum), maximum);
 	}
 
+}
+
+type ValueFormatter = (value: number) => string;
+
+interface VisibleItem {
+	index: number;
+	label: string;
+	offset: number;
+	visualDistance: number;
+	style: {
+		color: string | undefined;
+		opacity: number;
+		transform: string;
+	};
+	value: number;
 }
 
 export default toNative(DialSelector);

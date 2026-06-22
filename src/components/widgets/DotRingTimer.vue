@@ -8,12 +8,9 @@ import { Component, Prop, Ref, toNative, Vue, Watch } from 'vue-facing-decorator
 import { MAX_ELAPSED_SECONDS } from '@/domain/TimerSession';
 import type { DotColorStyle }  from '@/store/storage';
 
-const red    = { r : 255, g : 46, b : 31 };
-const yellow = { r : 255, g : 214, b : 0 };
-const green  = { r : 41, g : 184, b : 71 };
-
-type TimerColor = typeof red;
-
+/**
+ * Renders elapsed time as concentric progress rings on a responsive canvas.
+ */
 @Component
 class DotRingTimer extends Vue {
 
@@ -74,44 +71,44 @@ class DotRingTimer extends Vue {
 		context.setTransform(ratio, 0, 0, ratio, 0, 0);
 		context.clearRect(0, 0, size, size);
 
-		const center        = size / 2;
-		const baseDotRadius = Math.max(3, size * 0.011);
-		const ringGap       = size * 0.105;
-		const outerRadius   = size * 0.43;
-		const elapsed       = Math.min(Math.max(this.elapsedSeconds, 0), this.durationSeconds);
+		const center         = size / 2;
+		const baseDotRadius  = Math.max(3, size * 0.011);
+		const outerRadius    = size * 0.43;
+		const duration       = Math.max(1, this.durationSeconds);
+		const elapsed        = Math.max(this.elapsedSeconds, 0);
+		const secondsPerDot  = duration / dotsPerRing;
+		const inactive       = getComputedStyle(document.documentElement).getPropertyValue('--dot-inactive').trim();
+		const completedRings = Math.floor(elapsed / duration);
+		const ringCount      = Math.max(1, completedRings + 1);
+		const ringGap        = Math.max(baseDotRadius * 4.25, size * 0.055);
+		const minRadius      = baseDotRadius * 4;
+		const firstRing      = Math.max(0, ringCount - Math.max(1, Math.floor((outerRadius - minRadius) / ringGap) + 1));
 
-		for (let ring = 0; ring < 4; ring += 1) {
-			const ringStarted = ring === 0 || elapsed > ring * 3600;
+		for (let ring = firstRing; ring < ringCount; ring += 1) {
+			const ringRadius  = outerRadius - (ring - firstRing) * ringGap;
+			const ringElapsed = this.clamp(elapsed - ring * duration, 0, duration);
 
-			if (!ringStarted) {
-				continue;
-			}
-
-			const radius        = outerRadius - ring * ringGap;
-			const elapsedInRing = Math.min(Math.max(elapsed - ring * 3600, 0), 3600);
-
-			for (let minute = 0; minute < 60; minute += 1) {
-				const angle          = -Math.PI / 2 + (minute / 60) * Math.PI * 2;
-				const dotStartSecond = minute * 60;
-				const progress       = this.clamp((elapsedInRing - dotStartSecond) / 60, 0, 1);
-				const isCardinal     = minute % 15 === 0;
-				const dotRadius      = baseDotRadius * (ring === 0 ? 2 : 1) * (isCardinal ? 1.28 : 1);
-				const inactive       = getComputedStyle(document.documentElement).getPropertyValue('--dot-inactive').trim();
-				const activeColor    = this.activeDotColor(ring, minute, elapsed);
+			for (let dot = 0; dot < dotsPerRing; dot += 1) {
+				const angle          = -Math.PI / 2 + (dot / dotsPerRing) * Math.PI * 2;
+				const dotStartSecond = dot * secondsPerDot;
+				const progress       = this.clamp((ringElapsed - dotStartSecond) / secondsPerDot, 0, 1);
+				const isCardinal     = dot % 15 === 0;
+				const dotRadius      = baseDotRadius * 2 * (isCardinal ? 1.28 : 1);
+				const activeColor    = ring === 0 ? this.activeDotColor(dot, ringElapsed, duration) : this.toRgb(green);
 				context.fillStyle    = progress > 0 ? this.mixCss(inactive, activeColor, progress) : inactive;
 				context.beginPath();
-				context.arc(center + Math.cos(angle) * radius, center + Math.sin(angle) * radius, dotRadius, 0, Math.PI * 2);
+				context.arc(center + Math.cos(angle) * ringRadius, center + Math.sin(angle) * ringRadius, dotRadius, 0, Math.PI * 2);
 				context.fill();
 			}
 		}
 	}
 
-	activeDotColor(ring: number, minute: number, elapsed: number): string {
+	activeDotColor(dot: number, elapsed: number, duration: number): string {
 		if (this.colorStyle === 'gradient') {
-			return ring === 0 ? this.progressColor(minute / 59) : this.toRgb(green);
+			return this.progressColor(dot / 59);
 		}
 
-		return this.progressColor(this.clamp(Math.floor(Math.min(elapsed, 3600) / 60) / 59, 0, 1));
+		return this.progressColor(this.clamp(elapsed / duration, 0, 1));
 	}
 
 	progressColor(progress: number): string {
@@ -151,13 +148,20 @@ class DotRingTimer extends Vue {
 
 }
 
+const red         = { r : 255, g : 46, b : 31 };
+const yellow      = { r : 255, g : 214, b : 0 };
+const green       = { r : 41, g : 184, b : 71 };
+const dotsPerRing = 60;
+
+type TimerColor = typeof red;
+
 export default toNative(DotRingTimer);
 </script>
 
 <style scoped>
 .dot-ring-timer {
 	display: block;
-	width: min(calc(100vw - 32px), calc(50dvh - 16px), 440px);
+	width: min(calc(100vw - 16px), calc(50dvh - 16px), 440px);
 	aspect-ratio: 1;
 }
 </style>

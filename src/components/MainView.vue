@@ -2,7 +2,7 @@
 	<main class="app-shell u-flex u-flex-column u-items-center" :class="timerPositionClass">
 		<section class="timer-stage u-grid u-place-center">
 			<DotRingTimer
-				:elapsed-seconds="store.activeElapsedSeconds.value"
+				:elapsed-seconds="store.visualElapsedSeconds.value"
 				:duration-seconds="store.activeSession.value?.durationSeconds"
 				:color-style="store.dotColorStyle.value"
 			/>
@@ -46,14 +46,15 @@ import { List, Plus, Settings }     from '@lucide/vue';
 import { markRaw }                  from 'vue';
 import { Component, toNative, Vue } from 'vue-facing-decorator';
 
-import DotRingTimer      from '@/components/DotRingTimer.vue';
 import HistoryPanel      from '@/components/HistoryPanel.vue';
 import NewSessionPanel   from '@/components/NewSessionPanel.vue';
 import SettingsPanel     from '@/components/SettingsPanel.vue';
+import DotRingTimer      from '@/components/widgets/DotRingTimer.vue';
 import { useTimerStore } from '@/store/useTimerStore';
 
-type PanelName = 'new' | 'history' | 'settings';
-
+/**
+ * Coordinates the main timer view, persistent ticking, and temporary panels.
+ */
 @Component({ components : { DotRingTimer, HistoryPanel, List, NewSessionPanel, Plus, Settings, SettingsPanel } })
 class MainView extends Vue {
 
@@ -95,6 +96,8 @@ class MainView extends Vue {
 	}
 
 }
+
+type PanelName = 'new' | 'history' | 'settings';
 
 export default toNative(MainView);
 </script>

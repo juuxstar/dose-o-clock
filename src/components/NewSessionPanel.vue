@@ -60,11 +60,14 @@ import { Play }    from '@lucide/vue';
 import { markRaw } from 'vue';
 import { Component, Emit, Prop, toNative, Vue, Watch } from 'vue-facing-decorator';
 
-import DialSelector      from '@/components/DialSelector.vue';
-import PanelShell        from '@/components/PanelShell.vue';
+import DialSelector      from '@/components/widgets/DialSelector.vue';
+import PanelShell        from '@/components/widgets/PanelShell.vue';
 import { formatDosage }  from '@/domain/dosage';
 import { useTimerStore } from '@/store/useTimerStore';
 
+/**
+ * Collects dosage, start offset, and duration before creating a new timer session.
+ */
 @Component({ components : { DialSelector, PanelShell, Play }, emits : [ 'close', 'interact' ] })
 class NewSessionPanel extends Vue {
 
