@@ -187,13 +187,10 @@ export default toNative(NewSessionPanel);
 
 <style scoped>
 .panel-content--new-session {
-	padding-bottom: calc(70px + env(safe-area-inset-bottom));
+	padding-bottom: max(10px, env(safe-area-inset-bottom));
 }
 
 .new-session-start {
-	position: sticky;
-	bottom: 0;
-	z-index: 1;
 	margin-top: auto;
 	touch-action: manipulation;
 }
