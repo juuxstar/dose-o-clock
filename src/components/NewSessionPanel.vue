@@ -29,6 +29,18 @@
 				</p>
 			</section>
 
+			<section class="panel-section">
+				<h2 class="u-text-center">
+					Duration
+				</h2>
+				<DialSelector
+					v-model="selectedDurationMinutes"
+					:values="durationValues"
+					:format="formatDuration"
+					@interact="$emit('interact')"
+				/>
+			</section>
+
 			<button
 				class="primary-button primary-button--green new-session-start u-flex u-items-center u-justify-center u-gap-8"
 				type="button"
@@ -61,10 +73,12 @@ class NewSessionPanel extends Vue {
 
 	store         = markRaw(useTimerStore());
 	earlierValues = Array.from({ length : 19 }, (_, index) => index * 5);
+	durationValues = [ 45, 60, 75, 90 ];
 
-	localSelectedDosage         = this.store.defaultUnitHundredths.value;
-	localSelectedEarlierMinutes = 0;
-	lastStartActivatedAt        = 0;
+	localSelectedDosage          = this.store.defaultUnitHundredths.value;
+	localSelectedEarlierMinutes  = 0;
+	localSelectedDurationMinutes = 60;
+	lastStartActivatedAt         = 0;
 
 	get dosageValues(): number[] {
 		return this.store.dosageValues.value;
@@ -86,6 +100,14 @@ class NewSessionPanel extends Vue {
 		this.localSelectedEarlierMinutes = value;
 	}
 
+	get selectedDurationMinutes(): number {
+		return this.localSelectedDurationMinutes;
+	}
+
+	set selectedDurationMinutes(value: number) {
+		this.localSelectedDurationMinutes = value;
+	}
+
 	get earlierSubtext(): string {
 		if (this.localSelectedEarlierMinutes === 0) {
 			return '';
@@ -105,8 +127,9 @@ class NewSessionPanel extends Vue {
 	@Watch('open')
 	onOpenChanged(open: boolean): void {
 		if (open) {
-			this.localSelectedDosage         = this.store.defaultUnitHundredths.value;
-			this.localSelectedEarlierMinutes = 0;
+			this.localSelectedDosage          = this.store.defaultUnitHundredths.value;
+			this.localSelectedEarlierMinutes  = 0;
+			this.localSelectedDurationMinutes = 60;
 		}
 	}
 
@@ -120,6 +143,10 @@ class NewSessionPanel extends Vue {
 
 	formatEarlier(value: number): string {
 		return value === 0 ? 'Now' : String(value);
+	}
+
+	formatDuration(value: number): string {
+		return `${value}m`;
 	}
 
 	dosageColor(value: number): string {
@@ -149,7 +176,7 @@ class NewSessionPanel extends Vue {
 		}
 
 		this.lastStartActivatedAt = now;
-		this.store.startSession(this.localSelectedDosage, this.localSelectedEarlierMinutes);
+		this.store.startSession(this.localSelectedDosage, this.localSelectedEarlierMinutes, this.localSelectedDurationMinutes);
 		this.close();
 	}
 

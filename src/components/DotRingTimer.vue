@@ -20,6 +20,9 @@ class DotRingTimer extends Vue {
 	@Prop({ type : Number, required : true })
 	readonly elapsedSeconds!: number;
 
+	@Prop({ type : Number, default : MAX_ELAPSED_SECONDS })
+	readonly durationSeconds!: number;
+
 	@Prop({ type : String, required : true })
 	readonly colorStyle!: DotColorStyle;
 
@@ -43,6 +46,7 @@ class DotRingTimer extends Vue {
 	}
 
 	@Watch('elapsedSeconds')
+	@Watch('durationSeconds')
 	@Watch('colorStyle')
 	onTimerInputChanged(): void {
 		this.draw();
@@ -74,7 +78,7 @@ class DotRingTimer extends Vue {
 		const baseDotRadius = Math.max(3, size * 0.011);
 		const ringGap       = size * 0.105;
 		const outerRadius   = size * 0.43;
-		const elapsed       = Math.min(Math.max(this.elapsedSeconds, 0), MAX_ELAPSED_SECONDS);
+		const elapsed       = Math.min(Math.max(this.elapsedSeconds, 0), this.durationSeconds);
 
 		for (let ring = 0; ring < 4; ring += 1) {
 			const ringStarted = ring === 0 || elapsed > ring * 3600;

@@ -39,7 +39,8 @@ export default toNative(PanelShell);
 
 .panel-shell {
 	width: 100%;
-	height: 50dvh;
+	height: min(70.5dvh, 480px);
+	max-height: calc(100dvh - env(safe-area-inset-top) - 16px);
 	overflow: hidden;
 	border-radius: 18px 18px 0 0;
 	background: var(--secondary-grouped-bg);

@@ -37,12 +37,12 @@ export function useTimerStore() {
 		}
 	}
 
-	function startSession(unitHundredths: number, earlierMinutes: number, now: Date = new Date()): void {
+	function startSession(unitHundredths: number, earlierMinutes: number, durationMinutes: number, now: Date = new Date()): void {
 		if (activeSession.value) {
 			history.value = [ activeSession.value.end(now), ...history.value ];
 		}
 
-		activeSession.value = TimerSession.create(unitHundredths, earlierMinutes * 60, now);
+		activeSession.value = TimerSession.create(unitHundredths, earlierMinutes * 60, now, durationMinutes * 60);
 		currentTime.value   = now;
 		persistSessions();
 	}

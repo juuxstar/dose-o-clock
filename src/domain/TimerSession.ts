@@ -1,11 +1,13 @@
 export const MAX_ELAPSED_SECONDS = 4 * 60 * 60;
 export const AUTO_RESET_SECONDS = 24 * 60 * 60;
+export const DEFAULT_DURATION_SECONDS = 60 * 60;
 
 export interface TimerSessionValues {
 	id: string;
 	unitHundredths: number;
 	startedAt: string;
 	earlierOffsetSeconds: number;
+	durationSeconds?: number;
 	endedAt?: string;
 }
 
@@ -15,6 +17,7 @@ export class TimerSession {
 	readonly unitHundredths: number;
 	readonly startedAt: string;
 	readonly earlierOffsetSeconds: number;
+	readonly durationSeconds: number;
 	readonly endedAt?: string;
 
 	constructor(values: TimerSessionValues) {
@@ -22,11 +25,23 @@ export class TimerSession {
 		this.unitHundredths       = values.unitHundredths;
 		this.startedAt            = values.startedAt;
 		this.earlierOffsetSeconds = values.earlierOffsetSeconds;
+		this.durationSeconds      = values.durationSeconds ?? MAX_ELAPSED_SECONDS;
 		this.endedAt              = values.endedAt;
 	}
 
-	static create(unitHundredths: number, earlierOffsetSeconds: number, now: Date = new Date()): TimerSession {
-		return new TimerSession({ id : createSessionId(), unitHundredths, startedAt : now.toISOString(), earlierOffsetSeconds });
+	static create(
+		unitHundredths: number,
+		earlierOffsetSeconds: number,
+		now: Date = new Date(),
+		durationSeconds = DEFAULT_DURATION_SECONDS
+	): TimerSession {
+		return new TimerSession({
+			id        : createSessionId(),
+			startedAt : now.toISOString(),
+			unitHundredths,
+			earlierOffsetSeconds,
+			durationSeconds,
+		});
 	}
 
 	static from(value: TimerSessionValues): TimerSession {
@@ -45,6 +60,7 @@ export class TimerSession {
 			&& typeof candidate.startedAt === 'string'
 			&& !Number.isNaN(new Date(candidate.startedAt).getTime())
 			&& typeof candidate.earlierOffsetSeconds === 'number'
+			&& (candidate.durationSeconds === undefined || (typeof candidate.durationSeconds === 'number' && candidate.durationSeconds > 0))
 			&& (candidate.endedAt === undefined
 		  || (typeof candidate.endedAt === 'string' && !Number.isNaN(new Date(candidate.endedAt).getTime())))
 		);
@@ -55,18 +71,18 @@ export class TimerSession {
 		const started = new Date(this.startedAt);
 		const elapsed = (end.getTime() - started.getTime()) / 1000 + this.earlierOffsetSeconds;
 
-		return clamp(elapsed, 0, MAX_ELAPSED_SECONDS);
+		return clamp(elapsed, 0, this.durationSeconds);
 	}
 
 	automaticStopDate(): Date {
 		const started          = new Date(this.startedAt);
-		const remainingSeconds = Math.max(0, MAX_ELAPSED_SECONDS - this.earlierOffsetSeconds);
+		const remainingSeconds = Math.max(0, this.durationSeconds - this.earlierOffsetSeconds);
 
 		return new Date(started.getTime() + remainingSeconds * 1000);
 	}
 
 	shouldAutoStop(now: Date = new Date()): boolean {
-		return !this.endedAt && this.elapsedSeconds(now) >= MAX_ELAPSED_SECONDS;
+		return !this.endedAt && this.elapsedSeconds(now) >= this.durationSeconds;
 	}
 
 	withAutomaticStop(): TimerSession {
@@ -92,6 +108,7 @@ export class TimerSession {
 			unitHundredths       : this.unitHundredths,
 			startedAt            : this.startedAt,
 			earlierOffsetSeconds : this.earlierOffsetSeconds,
+			durationSeconds      : this.durationSeconds,
 			...(this.endedAt ? { endedAt : this.endedAt } : {}),
 		};
 	}

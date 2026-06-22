@@ -1,7 +1,11 @@
 <template>
 	<main class="app-shell u-flex u-flex-column u-items-center" :class="timerPositionClass">
 		<section class="timer-stage u-grid u-place-center">
-			<DotRingTimer :elapsed-seconds="store.activeElapsedSeconds.value" :color-style="store.dotColorStyle.value" />
+			<DotRingTimer
+				:elapsed-seconds="store.activeElapsedSeconds.value"
+				:duration-seconds="store.activeSession.value?.durationSeconds"
+				:color-style="store.dotColorStyle.value"
+			/>
 		</section>
 
 		<nav class="bottom-actions u-grid u-justify-between u-gap-12" aria-label="Timer actions">

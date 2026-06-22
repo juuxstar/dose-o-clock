@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { MAX_ELAPSED_SECONDS, TimerSession } from '@/domain/TimerSession';
+import { DEFAULT_DURATION_SECONDS, MAX_ELAPSED_SECONDS, TimerSession } from '@/domain/TimerSession';
 
 describe('TimerSession', () => {
-	it('clamps elapsed time from zero through four hours', () => {
+	it('clamps elapsed time from zero through the default duration', () => {
 		const startedAt = new Date('2026-06-15T12:00:00.000Z');
 		const session   = TimerSession.create(100, 0, startedAt);
 
 		expect(session.elapsedSeconds(new Date('2026-06-15T11:59:00.000Z'))).toBe(0);
-		expect(session.elapsedSeconds(new Date('2026-06-15T16:30:00.000Z'))).toBe(MAX_ELAPSED_SECONDS);
+		expect(session.elapsedSeconds(new Date('2026-06-15T13:30:00.000Z'))).toBe(DEFAULT_DURATION_SECONDS);
 	});
 
 	it('includes earlier offset in elapsed time', () => {
@@ -18,16 +18,28 @@ describe('TimerSession', () => {
 	});
 
 	it('calculates automatic stop date from remaining elapsed time', () => {
-		const session = TimerSession.create(100, 90 * 60, new Date('2026-06-15T12:00:00.000Z'));
+		const session = TimerSession.create(100, 30 * 60, new Date('2026-06-15T12:00:00.000Z'), 90 * 60);
 
-		expect(session.automaticStopDate().toISOString()).toBe('2026-06-15T14:30:00.000Z');
+		expect(session.automaticStopDate().toISOString()).toBe('2026-06-15T13:00:00.000Z');
 	});
 
-	it('marks sessions stopped once four elapsed hours are reached', () => {
+	it('marks sessions stopped once their selected duration is reached', () => {
 		const session = TimerSession.create(100, 0, new Date('2026-06-15T12:00:00.000Z'));
 
-		expect(session.shouldAutoStop(new Date('2026-06-15T16:00:00.000Z'))).toBe(true);
-		expect(session.withAutomaticStop().endedAt).toBe('2026-06-15T16:00:00.000Z');
+		expect(session.shouldAutoStop(new Date('2026-06-15T13:00:00.000Z'))).toBe(true);
+		expect(session.withAutomaticStop().endedAt).toBe('2026-06-15T13:00:00.000Z');
+	});
+
+	it('uses the former four-hour duration for legacy session data', () => {
+		const session = TimerSession.from({
+			id                   : 'legacy',
+			unitHundredths       : 100,
+			startedAt            : '2026-06-15T12:00:00.000Z',
+			earlierOffsetSeconds : 0,
+		});
+
+		expect(session.durationSeconds).toBe(MAX_ELAPSED_SECONDS);
+		expect(session.elapsedSeconds(new Date('2026-06-15T16:30:00.000Z'))).toBe(MAX_ELAPSED_SECONDS);
 	});
 
 	it('preserves an existing endedAt value when ending a session', () => {
