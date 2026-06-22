@@ -1,7 +1,7 @@
 <template>
 	<Transition name="panel-backdrop">
 		<div v-if="open" class="panel-backdrop u-flex u-items-end" @pointerdown.self="$emit('close')">
-			<section class="panel-shell" @pointerdown="$emit('interact')" @click="$emit('interact')">
+			<section :class="panelClasses" @pointerdown="$emit('interact')" @click="$emit('interact')">
 				<div class="panel-shell__handle" />
 				<slot />
 			</section>
@@ -21,6 +21,16 @@ class PanelShell extends Vue {
 	@Prop({ type : Boolean, required : true })
 	readonly open!: boolean;
 
+	@Prop({ type : String, default : 'default' })
+	readonly size!: PanelShellSize;
+
+	get panelClasses(): string[] {
+		return [
+			'panel-shell',
+			`panel-shell--${this.size}`,
+		];
+	}
+
 	@Emit('close')
 	close(): void {}
 
@@ -28,6 +38,8 @@ class PanelShell extends Vue {
 	interact(): void {}
 
 }
+
+type PanelShellSize = 'default' | 'tall';
 
 export default toNative(PanelShell);
 </script>
@@ -50,6 +62,10 @@ export default toNative(PanelShell);
 	box-shadow: 0 -12px 36px var(--panel-shadow);
 	padding: 8px 16px calc(16px + env(safe-area-inset-bottom));
 	will-change: transform;
+}
+
+.panel-shell--tall {
+	height: min(88dvh, 540px);
 }
 
 .panel-shell__handle {

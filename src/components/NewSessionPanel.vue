@@ -1,5 +1,5 @@
 <template>
-	<PanelShell :open="open" @close="$emit('close')" @interact="$emit('interact')">
+	<PanelShell :open="open" size="tall" @close="$emit('close')" @interact="$emit('interact')">
 		<div class="panel-content panel-content--new-session u-flex u-flex-column">
 			<section class="panel-section">
 				<h2 class="u-text-center">

@@ -163,14 +163,6 @@
 				</div>
 
 				<div v-else key="share" class="settings-page share-page u-grid u-gap-14 u-justify-items-center u-text-center">
-					<a
-						class="share-url"
-						:href="shareUrl"
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						{{ shareUrl }}
-					</a>
 					<div class="share-qr-wrap" aria-label="QR code for https://dose-o-clock.tovig.ca">
 						<svg
 							class="share-qr"
@@ -182,6 +174,14 @@
 							<path :d="shareQrPath" fill="currentColor" />
 						</svg>
 					</div>
+					<a
+						class="share-url"
+						:href="shareUrl"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						{{ shareUrl }}
+					</a>
 				</div>
 			</Transition>
 			<p v-if="page === 'main'" class="settings-build-stamp u-text-center">
@@ -236,7 +236,7 @@ class SettingsPanel extends Vue {
 			graphics : 'Graphics',
 			install  : 'Add to Home Screen',
 			main     : 'Settings',
-			share    : 'Share',
+			share    : 'Sharing is Caring',
 		}[this.page];
 	}
 
@@ -571,8 +571,8 @@ export default toNative(SettingsPanel);
 
 .share-url {
 	max-width: 100%;
-	color: var(--blue);
-	font-size: 15px;
+	color: var(--text);
+	font-size: 18px;
 	font-weight: 800;
 	overflow-wrap: anywhere;
 	text-decoration: none;
