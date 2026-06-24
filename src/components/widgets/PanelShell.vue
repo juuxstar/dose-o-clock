@@ -27,6 +27,7 @@ class PanelShell extends Vue {
 	get panelClasses(): string[] {
 		return [
 			'panel-shell',
+			'u-width-100',
 			`panel-shell--${this.size}`,
 		];
 	}
@@ -53,7 +54,6 @@ export default toNative(PanelShell);
 }
 
 .panel-shell {
-	width: 100%;
 	height: min(70.5dvh, 480px);
 	max-height: calc(100dvh - env(safe-area-inset-top) - 16px);
 	overflow: hidden;

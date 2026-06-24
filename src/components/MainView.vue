@@ -1,6 +1,6 @@
 <template>
 	<main class="app-shell u-flex u-flex-column u-items-center" :class="timerPositionClass">
-		<section class="timer-stage u-grid u-place-center">
+		<section class="timer-stage u-grid u-place-center u-width-100">
 			<DotRingTimer
 				:elapsed-seconds="store.visualElapsedSeconds.value"
 				:duration-seconds="store.activeSession.value?.durationSeconds"
@@ -47,7 +47,7 @@ import { Component, toNative, Vue } from 'vue-facing-decorator';
 
 import HistoryPanel      from '@/components/HistoryPanel.vue';
 import NewSessionPanel   from '@/components/NewSessionPanel.vue';
-import SettingsPanel     from '@/components/SettingsPanel.vue';
+import SettingsPanel     from '@/components/settings/SettingsPanel.vue';
 import DotRingTimer      from '@/components/widgets/DotRingTimer.vue';
 import { useTimerStore } from '@/store/useTimerStore';
 
@@ -113,7 +113,6 @@ export default toNative(MainView);
 
 .timer-stage {
 	min-height: 50dvh;
-	width: 100%;
 }
 
 .timer-position--center .timer-stage {

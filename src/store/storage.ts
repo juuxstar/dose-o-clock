@@ -1,11 +1,4 @@
-import {
-	DEFAULT_DOSAGE_HUNDREDTHS,
-	DEFAULT_INCREMENT_HUNDREDTHS,
-	DEFAULT_MAX_DOSAGE_HUNDREDTHS,
-	normalizeIncrement,
-	snapDefaultDosage,
-	snapMaxDosage
-} from '@/domain/dosage';
+import { Dosage }       from '@/domain/Dosage';
 import { TimerSession } from '@/domain/TimerSession';
 
 export type TimerPosition = 'top' | 'center'
@@ -29,15 +22,15 @@ export const STORAGE_KEYS = {
 } as const;
 
 export function loadState(now: Date = new Date()): PersistedState {
-	const dosageIncrementHundredths = normalizeIncrement(
-		readNumber(STORAGE_KEYS.dosageIncrementHundredths, DEFAULT_INCREMENT_HUNDREDTHS)
+	const dosageIncrementHundredths = Dosage.normalizeIncrement(
+		readNumber(STORAGE_KEYS.dosageIncrementHundredths, Dosage.defaultIncrement)
 	);
-	const maxUnitHundredths = snapMaxDosage(
-		readNumber(STORAGE_KEYS.maxUnitHundredths, DEFAULT_MAX_DOSAGE_HUNDREDTHS),
+	const maxUnitHundredths = Dosage.snapMax(
+		readNumber(STORAGE_KEYS.maxUnitHundredths, Dosage.defaultMaxHundredths),
 		dosageIncrementHundredths
 	);
-	const defaultUnitHundredths = snapDefaultDosage(
-		readNumber(STORAGE_KEYS.defaultUnitHundredths, DEFAULT_DOSAGE_HUNDREDTHS),
+	const defaultUnitHundredths = Dosage.snapDefault(
+		readNumber(STORAGE_KEYS.defaultUnitHundredths, Dosage.defaultHundredths),
 		maxUnitHundredths,
 		dosageIncrementHundredths
 	);
@@ -95,12 +88,12 @@ function readNumber(key: string, fallback: number): number {
 
 function readSession(key: string): TimerSession | null {
 	const decoded = readJson(localStorage.getItem(key));
-	return TimerSession.isTimerSession(decoded) ? TimerSession.from(decoded) : null;
+	return TimerSession.isTimerSession(decoded) ? new TimerSession(decoded) : null;
 }
 
 function readHistory(): TimerSession[] {
 	const decoded = readJson(localStorage.getItem(STORAGE_KEYS.history));
-	return Array.isArray(decoded) ? decoded.filter(TimerSession.isTimerSession).map(session => TimerSession.from(session)) : [];
+	return Array.isArray(decoded) ? decoded.filter(TimerSession.isTimerSession).map(session => new TimerSession(session)) : [];
 }
 
 function readTimerPosition(): TimerPosition {

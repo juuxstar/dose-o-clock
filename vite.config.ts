@@ -59,6 +59,7 @@ export default defineConfig(({ command, mode }) => {
 				},
 				workbox : {
 					globPatterns     : [ '**/*.{js,css,html,svg,png,ico}' ],
+					importScripts    : [ 'notification-events.js' ],
 					navigateFallback : '/index.html',
 					skipWaiting      : true,
 					clientsClaim     : true,

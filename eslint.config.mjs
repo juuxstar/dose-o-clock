@@ -9,6 +9,7 @@ export default [
 			'eslint.config.mjs',
 			'node_modules/**',
 			'coverage/**',
+			'public/notification-events.js',
 		],
 	},
 	...lcbConfig,

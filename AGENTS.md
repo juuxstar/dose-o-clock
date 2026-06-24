@@ -7,6 +7,8 @@
 - Add a brief JSDoc intent comment immediately above each component's `@Component` decorator.
 - Keep the main component class first in each Vue component script after imports and decorators.
 - Move local interfaces, type declarations, constants, and helper-only declarations below the main class when they are less important than the component itself.
+- Prefer existing CSS utility classes for common layout and styling needs before adding component-specific CSS.
+- Always choose from the shared font size CSS variables in `src/styles.css` instead of adding literal `font-size` values or new font size tokens.
 - Preserve existing project formatting, import sorting, and component patterns.
 
 # Local Verification

@@ -1,7 +1,6 @@
 :root {
 	color-scheme: light dark;
-	font-family:
-		ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+	font-family: ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
 	background: var(--grouped-bg);
 	color: var(--text);
 	--grouped-bg: #f2f2f7;
@@ -17,6 +16,11 @@
 	--blue: #007aff;
 	--gray: #8e8e93;
 	--panel-shadow: rgba(0, 0, 0, 0.18);
+	--font-size-xs: 12px;
+	--font-size-sm: 13px;
+	--font-size-body: 14px;
+	--font-size-title: 18px;
+	--font-size-display: 22px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -134,6 +138,14 @@ button:disabled {
 	text-align: right;
 }
 
+.u-width-100 {
+	width: 100%;
+}
+
+.u-margin-0 {
+	margin: 0;
+}
+
 .panel-content {
 	position: relative;
 	height: calc(100% - 15px);
@@ -149,12 +161,12 @@ button:disabled {
 .panel-section h3,
 .panel-title {
 	margin: 0 0 10px;
-	font-size: 18px;
+	font-size: var(--font-size-title);
 	font-weight: 700;
 }
 
 .panel-section h3 {
-	font-size: 15px;
+	font-size: var(--font-size-body);
 	color: var(--muted-text);
 }
 
@@ -162,11 +174,10 @@ button:disabled {
 	min-height: 20px;
 	margin: 6px 0 0;
 	color: var(--muted-text);
-	font-size: 14px;
+	font-size: var(--font-size-body);
 }
 
 .primary-button {
-	width: 100%;
 	min-height: 52px;
 	border-radius: 8px;
 	color: #ffffff;

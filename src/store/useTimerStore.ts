@@ -1,9 +1,8 @@
 import { computed, ref } from 'vue';
 
-import {
-	generateDosageValues, generateMaxDosageValues, normalizeIncrement, snapDefaultDosage, snapMaxDosage
-} from '@/domain/dosage';
-import { TimerSession } from '@/domain/TimerSession';
+import { Dosage }              from '@/domain/Dosage';
+import { SessionNotification } from '@/domain/SessionNotification';
+import { TimerSession }        from '@/domain/TimerSession';
 import { loadState, removeSessionData, saveActiveSession, saveHistory, saveSetting, type TimerPosition } from '@/store/storage';
 
 const initialState = loadState();
@@ -16,11 +15,13 @@ const dosageIncrementHundredths = ref(initialState.dosageIncrementHundredths);
 const timerPosition             = ref<TimerPosition>(initialState.timerPosition);
 const currentTime               = ref(new Date());
 
-const dosageValues         = computed(() => generateDosageValues(maxUnitHundredths.value, dosageIncrementHundredths.value));
-const maxDosageValues      = computed(() => generateMaxDosageValues(dosageIncrementHundredths.value));
+const dosageValues         = computed(() => Dosage.generateValues(maxUnitHundredths.value, dosageIncrementHundredths.value));
+const maxDosageValues      = computed(() => Dosage.generateMaxValues(dosageIncrementHundredths.value));
 const hasSessionData       = computed(() => Boolean(activeSession.value) || history.value.length > 0);
 const activeElapsedSeconds = computed(() => activeSession.value?.elapsedSeconds(currentTime.value) ?? 0);
 const visualElapsedSeconds = computed(() => activeSession.value?.visualElapsedSeconds(currentTime.value) ?? 0);
+
+SessionNotification.schedule(activeSession.value, currentTime.value);
 
 export function useTimerStore() {
 	function tick(now: Date = new Date()): void {
@@ -42,9 +43,10 @@ export function useTimerStore() {
 			history.value = [ activeSession.value.end(now), ...history.value ];
 		}
 
-		activeSession.value = TimerSession.create(unitHundredths, earlierMinutes * 60, now, durationMinutes * 60);
+		activeSession.value = new TimerSession(unitHundredths, earlierMinutes * 60, now, durationMinutes * 60);
 		currentTime.value   = now;
 		persistSessions();
+		SessionNotification.schedule(activeSession.value, now);
 	}
 
 	function deleteHistorySession(id: string): void {
@@ -56,16 +58,17 @@ export function useTimerStore() {
 		activeSession.value = null;
 		history.value       = [];
 		removeSessionData();
+		SessionNotification.clearState();
 	}
 
 	function setDefaultDosage(value: number): void {
-		defaultUnitHundredths.value = snapDefaultDosage(value, maxUnitHundredths.value, dosageIncrementHundredths.value);
+		defaultUnitHundredths.value = Dosage.snapDefault(value, maxUnitHundredths.value, dosageIncrementHundredths.value);
 		saveSetting('defaultUnitHundredths', defaultUnitHundredths.value);
 	}
 
 	function setMaxDosage(value: number): void {
-		maxUnitHundredths.value     = snapMaxDosage(value, dosageIncrementHundredths.value);
-		defaultUnitHundredths.value = snapDefaultDosage(
+		maxUnitHundredths.value     = Dosage.snapMax(value, dosageIncrementHundredths.value);
+		defaultUnitHundredths.value = Dosage.snapDefault(
 			defaultUnitHundredths.value,
 			maxUnitHundredths.value,
 			dosageIncrementHundredths.value
@@ -75,9 +78,9 @@ export function useTimerStore() {
 	}
 
 	function setDosageIncrement(value: number): void {
-		dosageIncrementHundredths.value = normalizeIncrement(value);
-		maxUnitHundredths.value         = snapMaxDosage(maxUnitHundredths.value, dosageIncrementHundredths.value);
-		defaultUnitHundredths.value     = snapDefaultDosage(
+		dosageIncrementHundredths.value = Dosage.normalizeIncrement(value);
+		maxUnitHundredths.value         = Dosage.snapMax(maxUnitHundredths.value, dosageIncrementHundredths.value);
+		defaultUnitHundredths.value     = Dosage.snapDefault(
 			defaultUnitHundredths.value,
 			maxUnitHundredths.value,
 			dosageIncrementHundredths.value
@@ -97,6 +100,14 @@ export function useTimerStore() {
 		saveHistory(history.value);
 	}
 
+	function refreshSessionNotificationSchedule(): void {
+		SessionNotification.schedule(activeSession.value, currentTime.value);
+	}
+
+	function clearSessionNotificationSchedule(): void {
+		SessionNotification.clearSchedule();
+	}
+
 	return {
 		activeSession,
 		history,
@@ -114,6 +125,8 @@ export function useTimerStore() {
 		startSession,
 		deleteHistorySession,
 		resetAllData,
+		refreshSessionNotificationSchedule,
+		clearSessionNotificationSchedule,
 		setDefaultDosage,
 		setMaxDosage,
 		setDosageIncrement,

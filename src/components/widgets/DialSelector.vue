@@ -347,7 +347,7 @@ export default toNative(DialSelector);
 	position: absolute;
 	min-width: 88px;
 	font-family: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, monospace;
-	font-size: 24px;
+	font-size: var(--font-size-display);
 	font-weight: 700;
 	transition:
 		transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),

@@ -47,7 +47,7 @@
 			</section>
 
 			<button
-				class="primary-button primary-button--green new-session-start u-flex u-items-center u-justify-center u-gap-8"
+				class="primary-button primary-button--green new-session-start u-flex u-items-center u-justify-center u-gap-8 u-width-100"
 				type="button"
 				@pointerdown.stop="$emit('interact')"
 				@touchend.stop.prevent="activateStart"
@@ -67,7 +67,7 @@ import { Component, Emit, Prop, toNative, Vue, Watch } from 'vue-facing-decorato
 
 import DialSelector      from '@/components/widgets/DialSelector.vue';
 import PanelShell        from '@/components/widgets/PanelShell.vue';
-import { formatDosage }  from '@/domain/dosage';
+import { Dosage }        from '@/domain/Dosage';
 import { useTimerStore } from '@/store/useTimerStore';
 
 /**
@@ -147,7 +147,7 @@ class NewSessionPanel extends Vue {
 	@Emit('interact')
 	interact(): void {}
 
-	formatDosage = formatDosage;
+	formatDosage = Dosage.format;
 
 	formatEarlier(value: number): string {
 		return value === 0 ? 'Now' : String(value);

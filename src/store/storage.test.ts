@@ -27,7 +27,7 @@ describe('storage', () => {
 	});
 
 	it('persists active session and history', () => {
-		const session = TimerSession.create(100, 0, new Date('2026-06-15T12:00:00.000Z'));
+		const session = new TimerSession(100, 0, new Date('2026-06-15T12:00:00.000Z'));
 
 		saveActiveSession(session);
 		saveHistory([ session ]);
@@ -40,7 +40,7 @@ describe('storage', () => {
 	});
 
 	it('clears active session and history on load when active session is 24 hours old', () => {
-		const oldSession = TimerSession.create(100, 0, new Date('2026-06-14T12:00:00.000Z'));
+		const oldSession = new TimerSession(100, 0, new Date('2026-06-14T12:00:00.000Z'));
 		saveActiveSession(oldSession);
 		saveHistory([ oldSession ]);
 

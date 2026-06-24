@@ -3,7 +3,7 @@
 		<div class="panel-content">
 			<header class="history-header u-grid u-items-center">
 				<span class="history-header__spacer" />
-				<h2 class="panel-title history-title u-text-center">
+				<h2 class="panel-title history-title u-text-center u-margin-0">
 					History
 				</h2>
 				<button
@@ -19,7 +19,9 @@
 
 			<div v-if="sessions.length === 0" class="empty-state u-grid u-place-center u-content-center u-gap-10">
 				<CircleHelp :size="42" />
-				<p>No previous timers</p>
+				<p class="u-margin-0">
+					No previous timers
+				</p>
 			</div>
 
 			<div v-else class="history-list u-grid u-gap-8">
@@ -48,18 +50,22 @@
 			<Transition name="panel-backdrop">
 				<div v-if="resetModalOpen" class="history-reset-modal-backdrop u-flex" @click.self="closeResetModal">
 					<section
-						class="history-reset-modal u-flex u-flex-column u-justify-center u-gap-14 u-text-center"
+						class="history-reset-modal u-flex u-flex-column u-justify-center u-gap-14 u-text-center u-width-100"
 						role="dialog"
 						aria-modal="true"
 						aria-labelledby="history-reset-title"
 					>
-						<h2 id="history-reset-title">
+						<h2 id="history-reset-title" class="u-margin-0">
 							Reset all Dose-o-clock data?
 						</h2>
-						<p>This clears the active timer and the history list.</p>
-						<p>All data is also reset automatically when the current active timer has been running for 24 hours.</p>
+						<p class="u-margin-0">
+							This clears the active timer and the history list.
+						</p>
+						<p class="u-margin-0">
+							All data is also reset automatically when the current active timer has been running for 24 hours.
+						</p>
 						<button
-							class="primary-button primary-button--red u-flex u-items-center u-justify-center u-gap-8"
+							class="primary-button primary-button--red u-flex u-items-center u-justify-center u-gap-8 u-width-100"
 							type="button"
 							@click="resetAllData"
 						>
@@ -79,7 +85,7 @@ import { markRaw }               from 'vue';
 import { Component, Emit, Prop, toNative, Vue, Watch } from 'vue-facing-decorator';
 
 import PanelShell                          from '@/components/widgets/PanelShell.vue';
-import { formatDosage }                    from '@/domain/dosage';
+import { Dosage }                          from '@/domain/Dosage';
 import { formatDuration, formatShortTime } from '@/domain/format';
 import { TimerSession }                    from '@/domain/TimerSession';
 import { useTimerStore }                   from '@/store/useTimerStore';
@@ -127,7 +133,7 @@ class HistoryPanel extends Vue {
 	@Emit('interact')
 	interact(): void {}
 
-	formatDosage     = formatDosage;
+	formatDosage     = Dosage.format;
 	formatDuration   = formatDuration;
 	formatShortTime  = formatShortTime;
 
@@ -219,7 +225,6 @@ export default toNative(HistoryPanel);
 }
 
 .empty-state p {
-	margin: 0;
 	font-weight: 700;
 }
 
@@ -230,10 +235,6 @@ export default toNative(HistoryPanel);
 
 .history-header__spacer {
 	width: 44px;
-}
-
-.history-title {
-	margin: 0;
 }
 
 .history-reset-button {
@@ -256,17 +257,11 @@ export default toNative(HistoryPanel);
 }
 
 .history-reset-modal {
-	width: 100%;
 	padding: 20px 0;
 }
 
-.history-reset-modal h2,
-.history-reset-modal p {
-	margin: 0;
-}
-
 .history-reset-modal h2 {
-	font-size: 18px;
+	font-size: var(--font-size-title);
 }
 
 .history-reset-modal p {
@@ -294,7 +289,7 @@ export default toNative(HistoryPanel);
 
 .history-row--recent {
 	min-height: 64px;
-	font-size: 22px;
+	font-size: var(--font-size-display);
 }
 
 .history-row--revealed {

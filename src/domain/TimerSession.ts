@@ -2,15 +2,6 @@ export const MAX_ELAPSED_SECONDS = 4 * 60 * 60;
 export const AUTO_RESET_SECONDS = 24 * 60 * 60;
 export const DEFAULT_DURATION_SECONDS = 60 * 60;
 
-export interface TimerSessionValues {
-	id: string;
-	unitHundredths: number;
-	startedAt: string;
-	earlierOffsetSeconds: number;
-	durationSeconds?: number;
-	endedAt?: string;
-}
-
 export class TimerSession {
 
 	readonly id: string;
@@ -20,32 +11,30 @@ export class TimerSession {
 	readonly durationSeconds: number;
 	readonly endedAt?: string;
 
-	constructor(values: TimerSessionValues) {
+	constructor(values: TimerSessionValues);
+	constructor(unitHundredths: number, earlierOffsetSeconds: number, now?: Date, durationSeconds?: number);
+	constructor(
+		valuesOrUnitHundredths: TimerSessionValues | number,
+		earlierOffsetSeconds?: number,
+		now: Date = new Date(),
+		durationSeconds = DEFAULT_DURATION_SECONDS
+	) {
+		const values = typeof valuesOrUnitHundredths === 'number'
+			? {
+				id                   : createSessionId(),
+				startedAt            : now.toISOString(),
+				unitHundredths       : valuesOrUnitHundredths,
+				earlierOffsetSeconds : earlierOffsetSeconds ?? 0,
+				durationSeconds,
+			}
+			: valuesOrUnitHundredths;
+
 		this.id                   = values.id;
 		this.unitHundredths       = values.unitHundredths;
 		this.startedAt            = values.startedAt;
 		this.earlierOffsetSeconds = values.earlierOffsetSeconds;
 		this.durationSeconds      = values.durationSeconds ?? MAX_ELAPSED_SECONDS;
 		this.endedAt              = values.endedAt;
-	}
-
-	static create(
-		unitHundredths: number,
-		earlierOffsetSeconds: number,
-		now: Date = new Date(),
-		durationSeconds = DEFAULT_DURATION_SECONDS
-	): TimerSession {
-		return new TimerSession({
-			id        : createSessionId(),
-			startedAt : now.toISOString(),
-			unitHundredths,
-			earlierOffsetSeconds,
-			durationSeconds,
-		});
-	}
-
-	static from(value: TimerSessionValues): TimerSession {
-		return new TimerSession(value);
 	}
 
 	static isTimerSession(value: unknown): value is TimerSessionValues {
@@ -148,4 +137,13 @@ function createSessionId(): string {
 	const hex = [ ...bytes ].map(value => value.toString(16).padStart(2, '0')).join('');
 
 	return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+export interface TimerSessionValues {
+	id: string;
+	unitHundredths: number;
+	startedAt: string;
+	earlierOffsetSeconds: number;
+	durationSeconds?: number;
+	endedAt?: string;
 }
