@@ -1,11 +1,12 @@
 {
   "name": "dose-o-clock",
-  "version": "0.1.0",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "dev:http": "vite --mode codex",
+    "prebuild": "npm version minor --no-git-tag-version",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "lint": "eslint .",

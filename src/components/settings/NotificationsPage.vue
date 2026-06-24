@@ -1,5 +1,5 @@
 <template>
-	<div class="settings-page notifications-page u-grid u-gap-12 u-content-center">
+	<div class="settings-page notifications-page u-grid u-gap-12">
 		<div
 			class="capability-status u-grid u-items-center u-gap-12 u-text-left"
 			:class="{ 'capability-status--ready' : notificationStatus === 'on' }"
@@ -22,12 +22,21 @@
 			<Bell :size="20" />
 			Enable Notifications
 		</button>
+		<button
+			v-if="notificationStatus === 'on'"
+			class="primary-button primary-button--red u-flex u-items-center u-justify-center u-gap-8 u-width-100"
+			type="button"
+			@click="disableNotifications"
+		>
+			<BellOff :size="20" />
+			Turn Off Notifications
+		</button>
 	</div>
 </template>
 
 <script lang="ts">
-import { Bell, CheckCircle2, XCircle }    from '@lucide/vue';
-import { Component, Prop, toNative, Vue } from 'vue-facing-decorator';
+import { Bell, BellOff, CheckCircle2, XCircle } from '@lucide/vue';
+import { Component, Prop, toNative, Vue }       from 'vue-facing-decorator';
 
 import { SessionNotification, type SessionNotificationStatus } from '@/domain/SessionNotification';
 import { useTimerStore } from '@/store/useTimerStore';
@@ -35,7 +44,7 @@ import { useTimerStore } from '@/store/useTimerStore';
 /**
  * Shows notification permission state and the enable action.
  */
-@Component({ components : { Bell, CheckCircle2, XCircle }, emits : [ 'interact', 'statusChange' ] })
+@Component({ components : { Bell, BellOff, CheckCircle2, XCircle }, emits : [ 'interact', 'statusChange' ] })
 class NotificationsPage extends Vue {
 
 	@Prop({ type : String, required : true })
@@ -74,6 +83,13 @@ class NotificationsPage extends Vue {
 		useTimerStore().refreshSessionNotificationSchedule();
 	}
 
+	disableNotifications(): void {
+		this.$emit('interact');
+		const status = SessionNotification.disable();
+		this.$emit('statusChange', status);
+		useTimerStore().clearSessionNotificationSchedule();
+	}
+
 }
 
 export default toNative(NotificationsPage);
@@ -81,6 +97,7 @@ export default toNative(NotificationsPage);
 
 <style scoped>
 .notifications-page {
+	align-content: start;
 	min-height: 210px;
 }
 

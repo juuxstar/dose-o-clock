@@ -115,6 +115,24 @@ describe('SessionNotification', () => {
 		expect(requestPermission).toHaveBeenCalledOnce();
 	});
 
+	it('can disable notifications after browser permission is granted', async () => {
+		const session = new TimerSession(100, 0, new Date('2026-06-15T12:00:00.000Z'), 60);
+
+		expect(SessionNotification.disable()).toBe('off');
+		SessionNotification.schedule(session, new Date('2026-06-15T12:05:00.000Z'));
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(showNotification).not.toHaveBeenCalled();
+	});
+
+	it('re-enables notifications without re-prompting when permission is already granted', async () => {
+		SessionNotification.disable();
+
+		await expect(SessionNotification.requestPermission()).resolves.toBe('on');
+
+		expect(requestPermission).not.toHaveBeenCalled();
+	});
+
 	it('clears pending timers and notification state', async () => {
 		const session = new TimerSession(100, 0, new Date('2026-06-15T12:00:00.000Z'), 60);
 
