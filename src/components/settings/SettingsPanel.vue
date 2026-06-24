@@ -1,5 +1,10 @@
 <template>
-	<PanelShell :open="open" @close="$emit('close')" @interact="$emit('interact')">
+	<PanelShell
+		:open="open"
+		size="tall"
+		@close="$emit('close')"
+		@interact="$emit('interact')"
+	>
 		<div class="panel-content">
 			<header class="settings-header u-grid u-items-center">
 				<button
@@ -50,14 +55,14 @@
 						<ChevronRight :size="20" aria-hidden="true" />
 					</button>
 					<button
-						class="settings-row settings-row--status u-grid u-items-center u-gap-8 u-text-left u-width-100"
+						class="settings-row u-grid u-items-center u-gap-8 u-text-left u-width-100"
 						:class="{ 'settings-row--available' : versionUpdateStatus === 'available' }"
 						type="button"
-						:disabled="refreshingApp"
-						@click="handleVersionUpdateClick"
+						@click="openPage('version')"
 					>
 						<span>Version Update</span>
 						<strong>{{ versionUpdateLabel }}</strong>
+						<ChevronRight :size="20" aria-hidden="true" />
 					</button>
 				</div>
 
@@ -84,11 +89,16 @@
 					@status-change="setNotificationStatus"
 				/>
 
-				<SharePage v-else key="share" />
+				<SharePage v-else-if="page === 'share'" key="share" />
+
+				<VersionUpdatePage
+					v-else
+					key="version"
+					:initial-version-update-status="versionUpdateStatus"
+					@interact="$emit('interact')"
+					@status-change="setVersionUpdateStatus"
+				/>
 			</Transition>
-			<p v-if="page === 'main'" class="settings-build-stamp u-text-center">
-				Build {{ buildStamp }}
-			</p>
 		</div>
 	</PanelShell>
 </template>
@@ -103,10 +113,11 @@ import GraphicsPage      from '@/components/settings/GraphicsPage.vue';
 import InstallPage       from '@/components/settings/InstallPage.vue';
 import NotificationsPage from '@/components/settings/NotificationsPage.vue';
 import SharePage         from '@/components/settings/SharePage.vue';
+import VersionUpdatePage from '@/components/settings/VersionUpdatePage.vue';
 import PanelShell        from '@/components/widgets/PanelShell.vue';
 import { Dosage }        from '@/domain/Dosage';
-import { SessionNotification, type SessionNotificationStatus }      from '@/domain/SessionNotification';
-import { checkVersionUpdate, refreshPwa, type VersionUpdateStatus } from '@/pwa';
+import { SessionNotification, type SessionNotificationStatus } from '@/domain/SessionNotification';
+import { checkVersionUpdate, type VersionUpdateStatus }        from '@/pwa';
 import { useTimerStore } from '@/store/useTimerStore';
 
 /**
@@ -122,6 +133,7 @@ import { useTimerStore } from '@/store/useTimerStore';
 		NotificationsPage,
 		PanelShell,
 		SharePage,
+		VersionUpdatePage,
 	},
 	emits : [ 'close', 'interact' ],
 })
@@ -140,7 +152,6 @@ class SettingsPanel extends Vue {
 	offlineReady         = false;
 	offlineCheckComplete = false;
 	offlineStatusDetail  = '';
-	refreshingApp        = false;
 	versionUpdateStatus: VersionUpdateStatus = 'unknown';
 	notificationStatus: SessionNotificationStatus = SessionNotification.status();
 
@@ -153,6 +164,7 @@ class SettingsPanel extends Vue {
 			main          : 'Settings',
 			notifications : 'Notifications',
 			share         : 'Sharing is Caring',
+			version       : 'Version Update',
 		}[this.page];
 	}
 
@@ -176,11 +188,6 @@ class SettingsPanel extends Vue {
 			return 'Offline Ready';
 		}
 		return this.canPromptInstall ? 'Install Ready' : 'Manual';
-	}
-
-	get buildStamp(): string {
-		return new Intl.DateTimeFormat(undefined, { dateStyle : 'medium', timeStyle : 'short' })
-			.format(new Date(import.meta.env.VITE_BUILD_TIMESTAMP));
 	}
 
 	get versionUpdateLabel(): string {
@@ -228,24 +235,13 @@ class SettingsPanel extends Vue {
 	@Emit('interact')
 	interact(): void {}
 
-	async handleVersionUpdateClick(): Promise<void> {
-		if (this.refreshingApp) {
-			return;
-		}
-
-		if (this.versionUpdateStatus !== 'available') {
-			await this.refreshVersionUpdateStatus();
-			return;
-		}
-
-		this.refreshingApp = true;
-		this.interact();
-		await refreshPwa();
-	}
-
 	async refreshVersionUpdateStatus(): Promise<void> {
 		const updateCheck        = await checkVersionUpdate();
 		this.versionUpdateStatus = updateCheck.status;
+	}
+
+	setVersionUpdateStatus(status: VersionUpdateStatus): void {
+		this.versionUpdateStatus = status;
 	}
 
 	openPage(nextPage: Page): void {
@@ -371,7 +367,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 type Page = 'main' | SettingsPageName;
 
-type SettingsPageName = 'dosage' | 'graphics' | 'install' | 'notifications' | 'share';
+type SettingsPageName = 'dosage' | 'graphics' | 'install' | 'notifications' | 'share' | 'version';
 
 export default toNative(SettingsPanel);
 </script>
@@ -399,13 +395,6 @@ export default toNative(SettingsPanel);
 	width: 44px;
 }
 
-.settings-build-stamp {
-	margin: 14px 0 0;
-	color: var(--muted-text);
-	font-size: var(--font-size-xs);
-	font-weight: 700;
-}
-
 .settings-row {
 	min-height: 54px;
 	grid-template-columns: 1fr auto 20px;
@@ -420,10 +409,6 @@ export default toNative(SettingsPanel);
 
 .settings-row svg {
 	color: var(--muted-text);
-}
-
-.settings-row--status {
-	grid-template-columns: 1fr auto;
 }
 
 .settings-row--available strong {

@@ -25,6 +25,14 @@ describe('TimerSession', () => {
 		expect(stopped.visualElapsedSeconds(new Date('2026-06-15T15:00:00.000Z'))).toBe(3 * 60 * 60);
 	});
 
+	it('keeps the recorded elapsed time for sessions ended after their selected duration', () => {
+		const session = new TimerSession(100, 0, new Date('2026-06-15T12:00:00.000Z'), 60 * 60)
+			.end(new Date('2026-06-15T13:25:00.000Z'));
+
+		expect(session.elapsedSeconds(new Date('2026-06-15T14:00:00.000Z'))).toBe(60 * 60);
+		expect(session.recordedElapsedSeconds(new Date('2026-06-15T14:00:00.000Z'))).toBe(85 * 60);
+	});
+
 	it('calculates automatic stop date from remaining elapsed time', () => {
 		const session = new TimerSession(100, 30 * 60, new Date('2026-06-15T12:00:00.000Z'), 90 * 60);
 

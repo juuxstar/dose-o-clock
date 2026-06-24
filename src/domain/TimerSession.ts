@@ -56,11 +56,15 @@ export class TimerSession {
 	}
 
 	elapsedSeconds(now: Date = new Date()): number {
+		return clamp(this.recordedElapsedSeconds(now), 0, this.durationSeconds);
+	}
+
+	recordedElapsedSeconds(now: Date = new Date()): number {
 		const end     = this.endedAt ? new Date(this.endedAt) : now;
 		const started = new Date(this.startedAt);
 		const elapsed = (end.getTime() - started.getTime()) / 1000 + this.earlierOffsetSeconds;
 
-		return clamp(elapsed, 0, this.durationSeconds);
+		return Math.max(0, elapsed);
 	}
 
 	visualElapsedSeconds(now: Date = new Date()): number {

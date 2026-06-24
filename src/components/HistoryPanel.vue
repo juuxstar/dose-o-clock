@@ -122,7 +122,7 @@ class HistoryPanel extends Vue {
 			...this.store.history.value.map(session => ({
 				session,
 				active  : false,
-				elapsed : session.elapsedSeconds(this.store.currentTime.value),
+				elapsed : session.recordedElapsedSeconds(this.store.currentTime.value),
 			})),
 		];
 	}
