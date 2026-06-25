@@ -67,6 +67,16 @@ describe('TimerSession', () => {
 		expect(session.end(new Date('2026-06-15T14:00:00.000Z')).endedAt).toBe('2026-06-15T13:00:00.000Z');
 	});
 
+	it('can replace an existing endedAt value when ending a session', () => {
+		const session = new TimerSession({
+			...new TimerSession(100, 0, new Date('2026-06-15T12:00:00.000Z')),
+			endedAt : '2026-06-15T13:00:00.000Z',
+		});
+
+		expect(session.end(new Date('2026-06-15T14:00:00.000Z'), { preserveExisting : false }).endedAt)
+			.toBe('2026-06-15T14:00:00.000Z');
+	});
+
 	it('detects sessions started at least 24 real hours ago', () => {
 		const session = new TimerSession(100, 90 * 60, new Date('2026-06-14T12:00:00.000Z'));
 

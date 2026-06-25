@@ -17,4 +17,17 @@ describe('useTimerStore', () => {
 		expect(store.history.value[0].elapsedSeconds()).toBe(60 * 60);
 		expect(store.history.value[0].recordedElapsedSeconds()).toBe(85 * 60);
 	});
+
+	it('records the real elapsed duration after an active session auto-stops', async () => {
+		const { useTimerStore } = await import('@/store/useTimerStore');
+		const store             = useTimerStore();
+
+		store.startSession(100, 0, 60, new Date('2026-06-15T12:00:00.000Z'));
+		store.tick(new Date('2026-06-15T13:00:00.000Z'));
+		store.startSession(100, 0, 60, new Date('2026-06-15T13:25:00.000Z'));
+
+		expect(store.history.value).toHaveLength(1);
+		expect(store.history.value[0].elapsedSeconds()).toBe(60 * 60);
+		expect(store.history.value[0].recordedElapsedSeconds()).toBe(85 * 60);
+	});
 });

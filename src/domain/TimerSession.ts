@@ -89,8 +89,8 @@ export class TimerSession {
 		return new TimerSession({ ...this, endedAt : this.automaticStopDate().toISOString() });
 	}
 
-	end(now: Date = new Date()): TimerSession {
-		if (this.endedAt) {
+	end(now: Date = new Date(), { preserveExisting }: { preserveExisting?: boolean } = {}): TimerSession {
+		if (this.endedAt && preserveExisting !== false) {
 			return this;
 		}
 
