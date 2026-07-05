@@ -1,3 +1,26 @@
+self.addEventListener('push', event => {
+	event.waitUntil((async () => {
+		const payload = readPushPayload(event);
+
+		await self.registration.showNotification(payload.title || 'Dose-o-clock', {
+			badge              : '/icons/icon.svg',
+			body               : payload.body || 'Session duration complete.',
+			data               : { sessionId : payload.sessionId, url : payload.url || '/' },
+			icon               : '/icons/icon.svg',
+			requireInteraction : true,
+			tag                : 'dose-o-clock-session-complete',
+		});
+
+		if (payload.ackUrl && payload.ackToken) {
+			await fetch(payload.ackUrl, {
+				body    : JSON.stringify({ ackToken : payload.ackToken }),
+				headers : { 'Content-Type' : 'application/json' },
+				method  : 'POST',
+			}).catch(() => undefined);
+		}
+	})());
+});
+
 self.addEventListener('notificationclick', event => {
 	event.notification.close();
 
@@ -15,3 +38,16 @@ self.addEventListener('notificationclick', event => {
 		await self.clients.openWindow(targetUrl);
 	})());
 });
+
+function readPushPayload(event) {
+	if (!event.data) {
+		return {};
+	}
+
+	try {
+		return event.data.json();
+	}
+	catch {
+		return {};
+	}
+}

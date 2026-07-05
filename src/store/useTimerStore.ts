@@ -21,7 +21,7 @@ const hasSessionData       = computed(() => Boolean(activeSession.value) || hist
 const activeElapsedSeconds = computed(() => activeSession.value?.elapsedSeconds(currentTime.value) ?? 0);
 const visualElapsedSeconds = computed(() => activeSession.value?.visualElapsedSeconds(currentTime.value) ?? 0);
 
-SessionNotification.schedule(activeSession.value, currentTime.value);
+void SessionNotification.schedule(activeSession.value, currentTime.value).catch(() => undefined);
 
 export function useTimerStore() {
 	function tick(now: Date = new Date()): void {
@@ -46,7 +46,7 @@ export function useTimerStore() {
 		activeSession.value = new TimerSession(unitHundredths, earlierMinutes * 60, now, durationMinutes * 60);
 		currentTime.value   = now;
 		persistSessions();
-		SessionNotification.schedule(activeSession.value, now);
+		void SessionNotification.schedule(activeSession.value, now).catch(() => undefined);
 	}
 
 	function deleteHistorySession(id: string): void {
@@ -101,11 +101,11 @@ export function useTimerStore() {
 	}
 
 	function refreshSessionNotificationSchedule(): void {
-		SessionNotification.schedule(activeSession.value, currentTime.value);
+		void SessionNotification.schedule(activeSession.value, currentTime.value).catch(() => undefined);
 	}
 
 	function clearSessionNotificationSchedule(): void {
-		SessionNotification.clearSchedule();
+		void SessionNotification.clearSchedule().catch(() => undefined);
 	}
 
 	return {

@@ -1,14 +1,11 @@
 import { TimerSession } from '@/domain/TimerSession';
 
-const LAST_NOTIFIED_SESSION_KEY = 'dose-o-clock.last-notified-session-id';
-const NOTIFICATIONS_ENABLED_KEY = 'dose-o-clock.notifications-enabled';
-const SESSION_COMPLETE_TAG      = 'dose-o-clock-session-complete';
-const NOTIFICATION_TITLE        = 'Dose-o-clock';
-const NOTIFICATION_BODY         = 'Session duration complete.';
+const lastNotifiedSessionKey  = 'dose-o-clock.last-notified-session-id';
+const notificationsEnabledKey = 'dose-o-clock.notifications-enabled';
+const clientIdKey             = 'dose-o-clock.notification-client-id';
+const clientSecretKey         = 'dose-o-clock.notification-client-secret';
 
 export class SessionNotification {
-
-	private static completionTimeout: number | undefined;
 
 	static status(): SessionNotificationStatus {
 		if (!this.isSupported()) {
@@ -40,74 +37,169 @@ export class SessionNotification {
 
 	static disable(): SessionNotificationStatus {
 		this.setEnabled(false);
-		this.clearSchedule();
+		void this.deleteRemote('subscription').catch(() => undefined);
 		return this.status();
 	}
 
-	static schedule(session: TimerSession | null, now: Date = new Date()): void {
-		this.clearSchedule();
+	static schedule(session: TimerSession | null, now: Date = new Date()): Promise<void> {
+		void now;
 
 		if (!session || this.status() !== 'on' || this.wasNotified(session.id)) {
-			return;
+			return Promise.resolve();
 		}
 
-		const completionAt = session.automaticStopDate().getTime();
-		const delay        = Math.max(0, completionAt - now.getTime());
-
-		this.completionTimeout = window.setTimeout(() => void this.show(session).catch(() => undefined), delay);
+		return this.scheduleRemote(session);
 	}
 
-	static clearSchedule(): void {
-		window.clearTimeout(this.completionTimeout);
-		this.completionTimeout = undefined;
+	static clearSchedule(): Promise<void> {
+		return this.deleteRemote('timer');
 	}
 
 	static clearState(): void {
-		this.clearSchedule();
-		localStorage.removeItem(LAST_NOTIFIED_SESSION_KEY);
-	}
-
-	private static async show(session: TimerSession): Promise<void> {
-		if (this.status() !== 'on' || this.wasNotified(session.id)) {
-			return;
-		}
-
-		const registration = await navigator.serviceWorker.ready;
-
-		await registration.showNotification(NOTIFICATION_TITLE, {
-			badge              : '/icons/icon.svg',
-			body               : NOTIFICATION_BODY,
-			data               : { sessionId : session.id, url : '/' },
-			icon               : '/icons/icon.svg',
-			requireInteraction : true,
-			tag                : SESSION_COMPLETE_TAG,
-		});
-
-		localStorage.setItem(LAST_NOTIFIED_SESSION_KEY, session.id);
+		void this.clearSchedule().catch(() => undefined);
+		localStorage.removeItem(lastNotifiedSessionKey);
 	}
 
 	private static isSupported(): boolean {
 		return Boolean(
-			window.isSecureContext
+			this.apiUrl()
+			&& this.vapidPublicKey()
+			&& window.isSecureContext
 			&& 'Notification' in window
 			&& 'serviceWorker' in navigator
 			&& navigator.serviceWorker
 			&& 'ready' in navigator.serviceWorker
+			&& typeof window.PushManager !== 'undefined'
 		);
 	}
 
+	private static async scheduleRemote(session: TimerSession): Promise<void> {
+		const registration = await navigator.serviceWorker.ready;
+		const subscription = await this.getPushSubscription(registration);
+		const identity     = this.getClientIdentity();
+
+		const response = await fetch(`${this.apiUrl()}/clients/${encodeURIComponent(identity.clientId)}/timer`, {
+			body : JSON.stringify({
+				clientSecret : identity.clientSecret,
+				subscription : subscription.toJSON(),
+				timer        : {
+					durationSeconds : session.durationSeconds,
+					expiresAt       : session.automaticStopDate().toISOString(),
+					sessionId       : session.id,
+				},
+			}),
+			headers : { 'Content-Type' : 'application/json' },
+			method  : 'POST',
+		});
+
+		if (!response.ok) {
+			throw new Error(`Notification schedule failed with ${response.status}`);
+		}
+	}
+
+	private static async deleteRemote(resource: 'subscription' | 'timer'): Promise<void> {
+		if (!this.apiUrl()) {
+			return;
+		}
+
+		const identity = this.getExistingClientIdentity();
+		if (!identity) {
+			return;
+		}
+
+		await fetch(`${this.apiUrl()}/clients/${encodeURIComponent(identity.clientId)}/${resource}`, {
+			body    : JSON.stringify({ clientSecret : identity.clientSecret }),
+			headers : { 'Content-Type' : 'application/json' },
+			method  : 'DELETE',
+		});
+	}
+
+	private static async getPushSubscription(registration: ServiceWorkerRegistration): Promise<PushSubscription> {
+		const existing = await registration.pushManager.getSubscription();
+		if (existing) {
+			return existing;
+		}
+
+		return registration.pushManager.subscribe({
+			applicationServerKey : base64UrlToArrayBuffer(this.vapidPublicKey()),
+			userVisibleOnly      : true,
+		});
+	}
+
 	private static wasNotified(sessionId: string): boolean {
-		return localStorage.getItem(LAST_NOTIFIED_SESSION_KEY) === sessionId;
+		return localStorage.getItem(lastNotifiedSessionKey) === sessionId;
 	}
 
 	private static isEnabled(): boolean {
-		return localStorage.getItem(NOTIFICATIONS_ENABLED_KEY) !== 'false';
+		return localStorage.getItem(notificationsEnabledKey) !== 'false';
 	}
 
 	private static setEnabled(enabled: boolean): void {
-		localStorage.setItem(NOTIFICATIONS_ENABLED_KEY, String(enabled));
+		localStorage.setItem(notificationsEnabledKey, String(enabled));
 	}
 
+	private static getClientIdentity(): SessionNotificationClientIdentity {
+		const existing = this.getExistingClientIdentity();
+		if (existing) {
+			return existing;
+		}
+
+		const identity = { clientId : createToken(), clientSecret : createToken() };
+
+		localStorage.setItem(clientIdKey, identity.clientId);
+		localStorage.setItem(clientSecretKey, identity.clientSecret);
+
+		return identity;
+	}
+
+	private static getExistingClientIdentity(): SessionNotificationClientIdentity | null {
+		const clientId     = localStorage.getItem(clientIdKey);
+		const clientSecret = localStorage.getItem(clientSecretKey);
+
+		if (!clientId || !clientSecret) {
+			return null;
+		}
+
+		return { clientId, clientSecret };
+	}
+
+	private static apiUrl(): string {
+		return import.meta.env.VITE_NOTIFICATION_API_URL?.replace(/\/$/, '') ?? '';
+	}
+
+	private static vapidPublicKey(): string {
+		return import.meta.env.VITE_VAPID_PUBLIC_KEY ?? '';
+	}
+
+}
+
+function base64UrlToArrayBuffer(value: string): ArrayBuffer {
+	const padding = '='.repeat((4 - value.length % 4) % 4);
+	const base64  = `${value}${padding}`.replace(/-/g, '+').replace(/_/g, '/');
+	const decoded = window.atob(base64);
+	const bytes   = new Uint8Array(decoded.length);
+
+	for (let index = 0; index < decoded.length; index += 1) {
+		bytes[index] = decoded.charCodeAt(index);
+	}
+
+	return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+}
+
+function createToken(): string {
+	if (globalThis.crypto?.randomUUID) {
+		return globalThis.crypto.randomUUID();
+	}
+
+	const bytes = new Uint8Array(16);
+	globalThis.crypto?.getRandomValues(bytes);
+
+	return [ ...bytes ].map(value => value.toString(16).padStart(2, '0')).join('');
+}
+
+interface SessionNotificationClientIdentity {
+	clientId: string;
+	clientSecret: string;
 }
 
 export type SessionNotificationStatus = 'on' | 'off' | 'blocked' | 'unavailable';

@@ -37,6 +37,14 @@ export default [
 		},
 	},
 	{
+		files           : [ 'worker/**/*.ts' ],
+		languageOptions : {
+			parserOptions : {
+				project : './tsconfig.worker.json',
+			},
+		},
+	},
+	{
 		files : [
 			'src/**/*.vue',
 			'src/main.ts',

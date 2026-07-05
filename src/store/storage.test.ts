@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { TimerSession } from '@/domain/TimerSession';
-import { loadState, saveActiveSession, saveHistory, STORAGE_KEYS } from '@/store/storage';
+import { loadState, saveActiveSession, saveHistory, storageKeys } from '@/store/storage';
 
 describe('storage', () => {
 	beforeEach(() => {
@@ -9,10 +9,10 @@ describe('storage', () => {
 	});
 
 	it('loads settings in dependency order and snaps invalid combinations', () => {
-		localStorage.setItem(STORAGE_KEYS.dosageIncrementHundredths, '25');
-		localStorage.setItem(STORAGE_KEYS.maxUnitHundredths, '110');
-		localStorage.setItem(STORAGE_KEYS.defaultUnitHundredths, '124');
-		localStorage.setItem(STORAGE_KEYS.timerPosition, 'center');
+		localStorage.setItem(storageKeys.dosageIncrementHundredths, '25');
+		localStorage.setItem(storageKeys.maxUnitHundredths, '110');
+		localStorage.setItem(storageKeys.defaultUnitHundredths, '124');
+		localStorage.setItem(storageKeys.timerPosition, 'center');
 
 		expect(loadState()).toMatchObject({
 			dosageIncrementHundredths : 25,
@@ -48,7 +48,7 @@ describe('storage', () => {
 
 		expect(loaded.activeSession).toBeNull();
 		expect(loaded.history).toEqual([]);
-		expect(localStorage.getItem(STORAGE_KEYS.activeSession)).toBeNull();
-		expect(localStorage.getItem(STORAGE_KEYS.history)).toBeNull();
+		expect(localStorage.getItem(storageKeys.activeSession)).toBeNull();
+		expect(localStorage.getItem(storageKeys.history)).toBeNull();
 	});
 });

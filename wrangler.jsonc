@@ -1,0 +1,25 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "dose-o-clock-notifications",
+	"main": "worker/src/index.ts",
+	"compatibility_date": "2026-07-05",
+	"vars": {
+		"ALLOWED_ORIGINS": "https://dose-o-clock.tovig.ca,http://localhost:5175"
+	},
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "NOTIFICATION_CLIENTS",
+				"class_name": "NotificationClient"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": [
+				"NotificationClient"
+			]
+		}
+	]
+}

@@ -1,6 +1,6 @@
-export const MAX_ELAPSED_SECONDS = 4 * 60 * 60;
-export const AUTO_RESET_SECONDS = 24 * 60 * 60;
-export const DEFAULT_DURATION_SECONDS = 60 * 60;
+export const maxElapsedSeconds = 4 * 60 * 60;
+export const autoResetSeconds = 24 * 60 * 60;
+export const defaultDurationSeconds = 60 * 60;
 
 export class TimerSession {
 
@@ -17,7 +17,7 @@ export class TimerSession {
 		valuesOrUnitHundredths: TimerSessionValues | number,
 		earlierOffsetSeconds?: number,
 		now: Date = new Date(),
-		durationSeconds = DEFAULT_DURATION_SECONDS
+		durationSeconds = defaultDurationSeconds
 	) {
 		const values = typeof valuesOrUnitHundredths === 'number'
 			? {
@@ -33,7 +33,7 @@ export class TimerSession {
 		this.unitHundredths       = values.unitHundredths;
 		this.startedAt            = values.startedAt;
 		this.earlierOffsetSeconds = values.earlierOffsetSeconds;
-		this.durationSeconds      = values.durationSeconds ?? MAX_ELAPSED_SECONDS;
+		this.durationSeconds      = values.durationSeconds ?? maxElapsedSeconds;
 		this.endedAt              = values.endedAt;
 	}
 
@@ -99,7 +99,7 @@ export class TimerSession {
 
 	isAtLeast24HoursOld(now: Date = new Date()): boolean {
 		const started = new Date(this.startedAt);
-		return now.getTime() - started.getTime() >= AUTO_RESET_SECONDS * 1000;
+		return now.getTime() - started.getTime() >= autoResetSeconds * 1000;
 	}
 
 	toJSON(): TimerSessionValues {

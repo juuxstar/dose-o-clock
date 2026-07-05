@@ -5,7 +5,7 @@
 <script lang="ts">
 import { Component, Prop, Ref, toNative, Vue, Watch } from 'vue-facing-decorator';
 
-import { MAX_ELAPSED_SECONDS } from '@/domain/TimerSession';
+import { maxElapsedSeconds } from '@/domain/TimerSession';
 
 /**
  * Renders elapsed time as one duration-scaled progress ring on a responsive canvas.
@@ -16,7 +16,7 @@ class DotRingTimer extends Vue {
 	@Prop({ type : Number, required : true })
 	readonly elapsedSeconds!: number;
 
-	@Prop({ type : Number, default : MAX_ELAPSED_SECONDS })
+	@Prop({ type : Number, default : maxElapsedSeconds })
 	readonly durationSeconds!: number;
 
 	@Ref('canvas')

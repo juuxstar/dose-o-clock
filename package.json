@@ -7,7 +7,7 @@
     "dev": "vite",
     "dev:http": "vite --mode codex",
     "prebuild": "npm version minor --no-git-tag-version",
-    "build": "vue-tsc --noEmit && vite build",
+    "build": "vue-tsc --noEmit && tsc -p tsconfig.worker.json --noEmit && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "vitest run"

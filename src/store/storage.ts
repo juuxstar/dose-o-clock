@@ -12,7 +12,7 @@ export interface PersistedState {
 	timerPosition: TimerPosition;
 }
 
-export const STORAGE_KEYS = {
+export const storageKeys = {
 	activeSession             : 'dose-o-clock.active-session',
 	history                   : 'dose-o-clock.history',
 	defaultUnitHundredths     : 'dose-o-clock.default-unit-hundredths',
@@ -23,19 +23,19 @@ export const STORAGE_KEYS = {
 
 export function loadState(now: Date = new Date()): PersistedState {
 	const dosageIncrementHundredths = Dosage.normalizeIncrement(
-		readNumber(STORAGE_KEYS.dosageIncrementHundredths, Dosage.defaultIncrement)
+		readNumber(storageKeys.dosageIncrementHundredths, Dosage.defaultIncrement)
 	);
 	const maxUnitHundredths = Dosage.snapMax(
-		readNumber(STORAGE_KEYS.maxUnitHundredths, Dosage.defaultMaxHundredths),
+		readNumber(storageKeys.maxUnitHundredths, Dosage.defaultMaxHundredths),
 		dosageIncrementHundredths
 	);
 	const defaultUnitHundredths = Dosage.snapDefault(
-		readNumber(STORAGE_KEYS.defaultUnitHundredths, Dosage.defaultHundredths),
+		readNumber(storageKeys.defaultUnitHundredths, Dosage.defaultHundredths),
 		maxUnitHundredths,
 		dosageIncrementHundredths
 	);
 	const timerPosition = readTimerPosition();
-	const activeSession = readSession(STORAGE_KEYS.activeSession);
+	const activeSession = readSession(storageKeys.activeSession);
 	const history       = readHistory();
 
 	if (activeSession && activeSession.isAtLeast24HoursOld(now)) {
@@ -55,24 +55,24 @@ export function loadState(now: Date = new Date()): PersistedState {
 
 export function saveActiveSession(session: TimerSession | null): void {
 	if (session) {
-		localStorage.setItem(STORAGE_KEYS.activeSession, JSON.stringify(session));
+		localStorage.setItem(storageKeys.activeSession, JSON.stringify(session));
 	}
 	else {
-		localStorage.removeItem(STORAGE_KEYS.activeSession);
+		localStorage.removeItem(storageKeys.activeSession);
 	}
 }
 
 export function saveHistory(history: TimerSession[]): void {
-	localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(history));
+	localStorage.setItem(storageKeys.history, JSON.stringify(history));
 }
 
-export function saveSetting(key: keyof typeof STORAGE_KEYS, value: number | string): void {
-	localStorage.setItem(STORAGE_KEYS[key], String(value));
+export function saveSetting(key: keyof typeof storageKeys, value: number | string): void {
+	localStorage.setItem(storageKeys[key], String(value));
 }
 
 export function removeSessionData(): void {
-	localStorage.removeItem(STORAGE_KEYS.activeSession);
-	localStorage.removeItem(STORAGE_KEYS.history);
+	localStorage.removeItem(storageKeys.activeSession);
+	localStorage.removeItem(storageKeys.history);
 }
 
 function readNumber(key: string, fallback: number): number {
@@ -92,12 +92,12 @@ function readSession(key: string): TimerSession | null {
 }
 
 function readHistory(): TimerSession[] {
-	const decoded = readJson(localStorage.getItem(STORAGE_KEYS.history));
+	const decoded = readJson(localStorage.getItem(storageKeys.history));
 	return Array.isArray(decoded) ? decoded.filter(TimerSession.isTimerSession).map(session => new TimerSession(session)) : [];
 }
 
 function readTimerPosition(): TimerPosition {
-	const value = localStorage.getItem(STORAGE_KEYS.timerPosition);
+	const value = localStorage.getItem(storageKeys.timerPosition);
 	return value === 'top' || value === 'center' ? value : 'top';
 }
 

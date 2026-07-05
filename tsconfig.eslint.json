@@ -3,6 +3,7 @@
 	"include": [
 		"src/**/*.ts",
 		"src/**/*.vue",
+		"worker/**/*.ts",
 		"vite.config.ts"
 	]
 }

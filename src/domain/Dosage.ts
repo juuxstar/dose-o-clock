@@ -1,6 +1,6 @@
-const SUPPORTED_INCREMENT_HUNDREDTHS = [ 10, 20, 25, 50 ] as const;
+const supportedIncrementHundredths = [ 10, 20, 25, 50 ] as const;
 
-export type DosageIncrementHundredths = (typeof SUPPORTED_INCREMENT_HUNDREDTHS)[number]
+export type DosageIncrementHundredths = (typeof supportedIncrementHundredths)[number]
 
 export class Dosage {
 
@@ -10,7 +10,7 @@ export class Dosage {
 	static readonly defaultHundredths      = 200;
 	static readonly defaultMaxHundredths   = 500;
 	static readonly defaultIncrement       = 10;
-	static readonly supportedIncrementValues = SUPPORTED_INCREMENT_HUNDREDTHS;
+	static readonly supportedIncrementValues = supportedIncrementHundredths;
 
 	static isSupportedIncrement(value: number): value is DosageIncrementHundredths {
 		return this.supportedIncrementValues.includes(value as DosageIncrementHundredths);

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { DEFAULT_DURATION_SECONDS, MAX_ELAPSED_SECONDS, TimerSession } from '@/domain/TimerSession';
+import { defaultDurationSeconds, maxElapsedSeconds, TimerSession } from '@/domain/TimerSession';
 
 describe('TimerSession', () => {
 	it('clamps elapsed time from zero through the default duration', () => {
@@ -8,7 +8,7 @@ describe('TimerSession', () => {
 		const session   = new TimerSession(100, 0, startedAt);
 
 		expect(session.elapsedSeconds(new Date('2026-06-15T11:59:00.000Z'))).toBe(0);
-		expect(session.elapsedSeconds(new Date('2026-06-15T13:30:00.000Z'))).toBe(DEFAULT_DURATION_SECONDS);
+		expect(session.elapsedSeconds(new Date('2026-06-15T13:30:00.000Z'))).toBe(defaultDurationSeconds);
 	});
 
 	it('includes earlier offset in elapsed time', () => {
@@ -54,8 +54,8 @@ describe('TimerSession', () => {
 			earlierOffsetSeconds : 0,
 		});
 
-		expect(session.durationSeconds).toBe(MAX_ELAPSED_SECONDS);
-		expect(session.elapsedSeconds(new Date('2026-06-15T16:30:00.000Z'))).toBe(MAX_ELAPSED_SECONDS);
+		expect(session.durationSeconds).toBe(maxElapsedSeconds);
+		expect(session.elapsedSeconds(new Date('2026-06-15T16:30:00.000Z'))).toBe(maxElapsedSeconds);
 	});
 
 	it('preserves an existing endedAt value when ending a session', () => {

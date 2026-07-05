@@ -2,9 +2,9 @@ import { registerSW } from 'virtual:pwa-register';
 
 export const updateServiceWorker = registerSW({ immediate : true });
 
-const APP_VERSION_URL         = '/app-version.json';
-const STARTUP_UPDATE_KEY      = 'dose-o-clock-startup-update-build';
-const CURRENT_BUILD_TIMESTAMP = import.meta.env.VITE_BUILD_TIMESTAMP;
+const appVersionUrl         = '/app-version.json';
+const startupUpdateKey      = 'dose-o-clock-startup-update-build';
+const currentBuildTimestamp = import.meta.env.VITE_BUILD_TIMESTAMP;
 
 export type VersionUpdateStatus = 'available' | 'up-to-date' | 'unknown';
 
@@ -68,19 +68,19 @@ async function refreshFromLatestVersionIfNeeded(): Promise<void> {
 		return;
 	}
 
-	if (sessionStorage.getItem(STARTUP_UPDATE_KEY) === CURRENT_BUILD_TIMESTAMP) {
+	if (sessionStorage.getItem(startupUpdateKey) === currentBuildTimestamp) {
 		return;
 	}
 
 	const updateCheck = await checkVersionUpdate();
 	if (updateCheck.status === 'available') {
-		sessionStorage.setItem(STARTUP_UPDATE_KEY, CURRENT_BUILD_TIMESTAMP);
+		sessionStorage.setItem(startupUpdateKey, currentBuildTimestamp);
 		await refreshPwa();
 	}
 }
 
 function getAppVersionUrl(): string {
-	const url = new URL(APP_VERSION_URL, window.location.origin);
+	const url = new URL(appVersionUrl, window.location.origin);
 	url.searchParams.set('t', Date.now().toString());
 	return url.toString();
 }
@@ -90,7 +90,7 @@ function isNewerBuild(buildTimestamp: string | undefined): boolean {
 		return false;
 	}
 
-	return new Date(buildTimestamp).getTime() > new Date(CURRENT_BUILD_TIMESTAMP).getTime();
+	return new Date(buildTimestamp).getTime() > new Date(currentBuildTimestamp).getTime();
 }
 
 interface AppVersionManifest {

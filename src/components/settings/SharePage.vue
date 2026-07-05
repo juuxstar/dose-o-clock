@@ -32,11 +32,11 @@ import { Component, toNative, Vue } from 'vue-facing-decorator';
 class SharePage extends Vue {
 
 	shareUrl    = 'https://dose-o-clock.tovig.ca';
-	shareQrPath = SHARE_QR_PATH;
+	shareQrPath = shareQrPath;
 
 }
 
-const SHARE_QR_PATH = [
+const shareQrPath = [
 	'M0 0h7v1H0zM8 0h1v1H8zM10 0h3v1H10zM14 0h1v1H14zM18 0h7v1H18zM0 1h1v1H0zM6 1h1v1H6zM9 1h2v1H9zM18 1h1v1H18zM24 1h1v1H24z',
 	'M0 2h1v1H0zM2 2h3v1H2zM6 2h1v1H6zM10 2h1v1H10zM12 2h4v1H12zM18 2h1v1H18zM20 2h3v1H20zM24 2h1v1H24zM0 3h1v1H0zM2 3h3v1H2z',
 	'M6 3h1v1H6zM12 3h2v1H12zM15 3h2v1H15zM18 3h1v1H18zM20 3h3v1H20zM24 3h1v1H24zM0 4h1v1H0zM2 4h3v1H2zM6 4h1v1H6zM9 4h1v1H9z',
