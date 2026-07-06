@@ -53,7 +53,7 @@ describe('NotificationClient', () => {
 
 		expect(fetchMock).toHaveBeenCalledOnce();
 		expect(fetchMock.mock.calls[0][0]).toBe(pushSubscription.endpoint);
-		expect(fetchMock.mock.calls[0][1].headers).toMatchObject({ TTL : '5400', Topic : 'dose-o-clock-session-1', Urgency : 'high' });
+		expect(fetchMock.mock.calls[0][1].headers).toMatchObject({ TTL : '5400', Topic : 'dose-session-1', Urgency : 'high' });
 		expect(storage.alarm).toBeGreaterThan(Date.now());
 		expect((storage.values.get('activeTimer') as TestActiveTimer).retryCount).toBe(1);
 	});

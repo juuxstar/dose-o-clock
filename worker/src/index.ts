@@ -182,6 +182,7 @@ export class NotificationClient {
 			title     : notificationTitle,
 			url       : '/',
 		}, timer.sessionId);
+		console.info('web push send', JSON.stringify({ status : response.status, sessionId : timer.sessionId }));
 
 		if (response.status === 404 || response.status === 410) {
 			await this.writeRecord({ ...record, activeTimer : undefined, pushSubscription : undefined });
@@ -292,11 +293,16 @@ export async function sendWebPush(
 			'Content-Encoding' : 'aes128gcm',
 			'Content-Type'     : 'application/octet-stream',
 			'TTL'              : String(pushTtlSeconds),
-			'Topic'            : `dose-o-clock-${topic}`,
+			'Topic'            : getPushTopic(topic),
 			'Urgency'          : 'high',
 		},
 		method : 'POST',
 	});
+}
+
+function getPushTopic(topic: string): string {
+	const normalizedTopic = topic.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 19);
+	return `dose-${normalizedTopic || 'timer'}`;
 }
 
 async function encryptPushPayload(subscription: StoredPushSubscription, payload: string): Promise<EncryptedPayload> {
