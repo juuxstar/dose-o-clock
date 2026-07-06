@@ -94,6 +94,10 @@ const timerRingShapeOptions: TimerRingShapeOption[] = [
 	{ value : 1, label : 'Darts', shape : 'darts' },
 	{ value : 2, label : 'Diamond', shape : 'diamond' },
 	{ value : 3, label : 'Bars', shape : 'bars' },
+	{ value : 4, label : 'Capsules', shape : 'capsules' },
+	{ value : 5, label : 'Ticks', shape : 'ticks' },
+	{ value : 6, label : 'Petals', shape : 'petals' },
+	{ value : 7, label : 'Minimal', shape : 'minimal' },
 ];
 
 interface TimerPositionOption {

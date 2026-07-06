@@ -5,7 +5,8 @@
 <script lang="ts">
 import { Component, Prop, Ref, toNative, Vue, Watch } from 'vue-facing-decorator';
 
-import { maxElapsedSeconds } from '@/domain/TimerSession';
+import { maxElapsedSeconds }   from '@/domain/TimerSession';
+import type { TimerRingShape } from '@/store/storage';
 
 /**
  * Renders elapsed time as one duration-scaled progress ring on a responsive canvas.
@@ -78,10 +79,21 @@ class RingTimer extends Vue {
 		const diamondSize   = baseDotRadius * 4.2;
 		const barLength     = baseDotRadius * 5.8;
 		const barWidth      = baseDotRadius * 2.3;
+		const capsuleLength = baseDotRadius * 6.4;
+		const capsuleWidth  = baseDotRadius * 2.9;
+		const tickLength    = baseDotRadius * 6.3;
+		const tickWidth     = Math.max(2, baseDotRadius * 0.95);
+		const petalLength   = baseDotRadius * 6.2;
+		const petalWidth    = baseDotRadius * 3.8;
 		const duration      = Math.max(1, this.durationSeconds);
 		const elapsed       = Math.max(this.elapsedSeconds, 0);
 		const secondsPerDot = duration / dotsPerRing;
 		const inactive      = getComputedStyle(document.documentElement).getPropertyValue('--dot-inactive').trim();
+
+		if (this.ringShape === 'minimal') {
+			this.drawMinimalRing(context, center, outerRadius, baseDotRadius * 3.2, elapsed, duration, inactive);
+			return;
+		}
 
 		for (let dot = 0; dot < dotsPerRing; dot += 1) {
 			const angle          = -Math.PI / 2 + (dot / dotsPerRing) * Math.PI * 2;
@@ -101,6 +113,16 @@ class RingTimer extends Vue {
 			}
 			else if (this.ringShape === 'bars') {
 				this.drawBar(context, center, outerRadius, angle, barLength * shapeScale, barWidth * shapeScale);
+			}
+			else if (this.ringShape === 'capsules') {
+				this.drawCapsule(context, center, outerRadius, angle, capsuleLength * shapeScale, capsuleWidth * shapeScale);
+			}
+			else if (this.ringShape === 'ticks') {
+				context.strokeStyle = context.fillStyle;
+				this.drawTick(context, center, outerRadius, angle, tickLength * shapeScale, tickWidth * shapeScale);
+			}
+			else if (this.ringShape === 'petals') {
+				this.drawPetal(context, center, outerRadius, angle, petalLength * shapeScale, petalWidth * shapeScale);
 			}
 			else {
 				context.beginPath();
@@ -159,10 +181,106 @@ class RingTimer extends Vue {
 		context.restore();
 	}
 
+	drawCapsule(context: CanvasRenderingContext2D, center: number, radius: number, angle: number, length: number, width: number): void {
+		const outerX      = center + Math.cos(angle) * radius;
+		const outerY      = center + Math.sin(angle) * radius;
+		const inwardAngle = angle + Math.PI;
+
+		context.save();
+		context.translate(outerX, outerY);
+		context.rotate(inwardAngle);
+		this.roundedRect(context, -length / 2, -width / 2, length, width, width / 2);
+		context.fill();
+		context.restore();
+	}
+
+	drawTick(context: CanvasRenderingContext2D, center: number, radius: number, angle: number, length: number, width: number): void {
+		const innerRadius = radius - length / 2;
+		const outerRadius = radius + length / 2;
+
+		context.save();
+		context.lineCap   = 'round';
+		context.lineWidth = width;
+		context.beginPath();
+		context.moveTo(center + Math.cos(angle) * innerRadius, center + Math.sin(angle) * innerRadius);
+		context.lineTo(center + Math.cos(angle) * outerRadius, center + Math.sin(angle) * outerRadius);
+		context.stroke();
+		context.restore();
+	}
+
+	drawPetal(context: CanvasRenderingContext2D, center: number, radius: number, angle: number, length: number, width: number): void {
+		const outerX      = center + Math.cos(angle) * radius;
+		const outerY      = center + Math.sin(angle) * radius;
+		const inwardAngle = angle + Math.PI;
+
+		context.save();
+		context.translate(outerX, outerY);
+		context.rotate(inwardAngle);
+		context.beginPath();
+		context.moveTo(length / 2, 0);
+		context.bezierCurveTo(length * 0.12, -width / 2, -length / 2, -width / 2, -length / 2, 0);
+		context.bezierCurveTo(-length / 2, width / 2, length * 0.12, width / 2, length / 2, 0);
+		context.fill();
+		context.restore();
+	}
+
+	drawMinimalRing(
+		context: CanvasRenderingContext2D,
+		center: number,
+		radius: number,
+		width: number,
+		elapsed: number,
+		duration: number,
+		inactive: string
+	): void {
+		const progress = elapsed >= duration ? 1 : this.clamp(elapsed / duration, 0, 1);
+
+		context.save();
+		context.lineWidth   = width;
+		context.lineCap     = 'round';
+		context.strokeStyle = inactive;
+		context.beginPath();
+		context.arc(center, center, radius, 0, Math.PI * 2);
+		context.stroke();
+
+		if (progress > 0) {
+			const segmentCount = Math.max(1, Math.ceil(progress * smoothRingSegments));
+			for (let segment = 0; segment < segmentCount; segment += 1) {
+				const segmentStart = segment / smoothRingSegments;
+				const segmentEnd   = Math.min((segment + 1) / smoothRingSegments, progress);
+
+				context.strokeStyle = this.activeColorAt(segmentStart, elapsed, duration);
+				context.beginPath();
+				context.arc(center, center, radius, -Math.PI / 2 + segmentStart * Math.PI * 2, -Math.PI / 2 + segmentEnd * Math.PI * 2);
+				context.stroke();
+			}
+		}
+
+		context.restore();
+	}
+
+	roundedRect(context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number): void {
+		context.beginPath();
+		context.moveTo(x + radius, y);
+		context.lineTo(x + width - radius, y);
+		context.quadraticCurveTo(x + width, y, x + width, y + radius);
+		context.lineTo(x + width, y + height - radius);
+		context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+		context.lineTo(x + radius, y + height);
+		context.quadraticCurveTo(x, y + height, x, y + height - radius);
+		context.lineTo(x, y + radius);
+		context.quadraticCurveTo(x, y, x + radius, y);
+		context.closePath();
+	}
+
 	activeColor(dot: number, elapsed: number, duration: number): string {
-		const baseColor        = this.progressColor(dot / (dotsPerRing - 1));
+		return this.activeColorAt(dot / (dotsPerRing - 1), elapsed, duration);
+	}
+
+	activeColorAt(position: number, elapsed: number, duration: number): string {
+		const baseColor        = this.progressColor(position);
 		const overtimeProgress = this.clamp((elapsed - duration) / duration, 0, 1);
-		const dotGreenProgress = this.clamp((overtimeProgress - dot / dotsPerRing) * dotsPerRing, 0, 1);
+		const dotGreenProgress = this.clamp((overtimeProgress - position) * dotsPerRing, 0, 1);
 
 		return this.toRgb(this.mixRgb(this.parseRgb(baseColor), green, dotGreenProgress));
 	}
@@ -204,14 +322,14 @@ class RingTimer extends Vue {
 
 }
 
-const red           = { r : 255, g : 46, b : 31 };
-const yellow        = { r : 255, g : 214, b : 0 };
-const green         = { r : 41, g : 184, b : 71 };
-const dotsPerRing   = 60;
-const cardinalScale = 1.36;
+const red                = { r : 255, g : 46, b : 31 };
+const yellow             = { r : 255, g : 214, b : 0 };
+const green              = { r : 41, g : 184, b : 71 };
+const dotsPerRing        = 60;
+const smoothRingSegments = 120;
+const cardinalScale      = 1.36;
 
 type TimerColor = typeof red;
-type TimerRingShape = 'dots' | 'darts' | 'diamond' | 'bars';
 
 export default toNative(RingTimer);
 </script>

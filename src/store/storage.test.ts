@@ -39,6 +39,14 @@ describe('storage', () => {
 		expect(loadState()).toMatchObject({ timerRingShape : 'dots' });
 	});
 
+	it('loads newer timer ring shapes', () => {
+		for (const shape of [ 'capsules', 'ticks', 'petals', 'minimal' ]) {
+			localStorage.setItem(storageKeys.timerRingShape, shape);
+
+			expect(loadState()).toMatchObject({ timerRingShape : shape });
+		}
+	});
+
 	it('persists active session and history', () => {
 		const session = new TimerSession(100, 0, new Date('2026-06-15T12:00:00.000Z'));
 

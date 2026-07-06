@@ -2,7 +2,7 @@ import { Dosage }       from '@/domain/Dosage';
 import { TimerSession } from '@/domain/TimerSession';
 
 export type TimerPosition = 'top' | 'center'
-export type TimerRingShape = 'dots' | 'darts' | 'diamond' | 'bars'
+export type TimerRingShape = 'dots' | 'darts' | 'diamond' | 'bars' | 'capsules' | 'ticks' | 'petals' | 'minimal'
 
 export interface PersistedState {
 	activeSession: TimerSession | null;
@@ -116,7 +116,11 @@ function readTimerPosition(): TimerPosition {
 
 function readTimerRingShape(): TimerRingShape {
 	const value = localStorage.getItem(storageKeys.timerRingShape);
-	return value === 'dots' || value === 'darts' || value === 'diamond' || value === 'bars' ? value : 'dots';
+	return isTimerRingShape(value) ? value : 'dots';
+}
+
+function isTimerRingShape(value: string | null): value is TimerRingShape {
+	return !!value && [ 'dots', 'darts', 'diamond', 'bars', 'capsules', 'ticks', 'petals', 'minimal' ].includes(value);
 }
 
 function readJson(raw: string | null): unknown {
