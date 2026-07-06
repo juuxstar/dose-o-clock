@@ -22,7 +22,7 @@ describe('SessionNotification', () => {
 			endpoint       : 'https://push.example.test/send/client',
 			expirationTime : null,
 			getKey         : vi.fn(),
-			options        : { applicationServerKey : null, userVisibleOnly : true },
+			options        : { applicationServerKey : base64UrlToArrayBuffer('BEl6eJr4mS6E03xTvZwaM7OPs7amDGyydH6pgoYBL5wzzqf4VTIkuVaDkAyxjYtsQxLZqZ6wXk3kF-Ufng6uefA'), userVisibleOnly : true },
 			toJSON         : () => ({
 				endpoint       : 'https://push.example.test/send/client',
 				expirationTime : null,
@@ -115,6 +115,22 @@ describe('SessionNotification', () => {
 		expect(replacementBody.timer.sessionId).toBe(secondSession.id);
 	});
 
+	it('replaces an existing push subscription for an old VAPID key', async () => {
+		const applicationServerKey = base64UrlToArrayBuffer('BOldAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
+		const oldSubscription      = {
+			...subscription,
+			options     : { applicationServerKey, userVisibleOnly : true },
+			unsubscribe : vi.fn(async () => true),
+		} as unknown as PushSubscription;
+		const session = new TimerSession(100, 0, new Date('2026-06-15T12:00:00.000Z'), 60);
+
+		getSubscription.mockResolvedValue(oldSubscription);
+		await SessionNotification.schedule(session, new Date('2026-06-15T12:00:00.000Z'));
+
+		expect(oldSubscription.unsubscribe).toHaveBeenCalledOnce();
+		expect(subscribe).toHaveBeenCalledOnce();
+	});
+
 	it('clears the remote timer', async () => {
 		const session = new TimerSession(100, 0, new Date('2026-06-15T12:00:00.000Z'), 60);
 
@@ -159,3 +175,11 @@ describe('SessionNotification', () => {
 		expect(SessionNotification.status()).toBe('unavailable');
 	});
 });
+
+function base64UrlToArrayBuffer(value: string): ArrayBuffer {
+	const padding = '='.repeat((4 - value.length % 4) % 4);
+	const base64  = `${value}${padding}`.replace(/-/g, '+').replace(/_/g, '/');
+	const bytes   = Uint8Array.from(atob(base64), character => character.charCodeAt(0));
+
+	return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+}

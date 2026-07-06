@@ -1,9 +1,10 @@
 <template>
 	<main class="app-shell u-flex u-flex-column u-items-center" :class="timerPositionClass">
 		<section class="timer-stage u-grid u-place-center u-width-100">
-			<DotRingTimer
+			<RingTimer
 				:elapsed-seconds="store.visualElapsedSeconds.value"
 				:duration-seconds="store.activeSession.value?.durationSeconds"
+				:ring-shape="store.timerRingShape.value"
 			/>
 		</section>
 
@@ -36,7 +37,21 @@
 
 		<NewSessionPanel :open="openPanelName === 'new'" @close="closePanel" @interact="resetAutoClose" />
 		<HistoryPanel :open="openPanelName === 'history'" @close="closePanel" @interact="resetAutoClose" />
-		<SettingsPanel :open="openPanelName === 'settings'" @close="closePanel" @interact="resetAutoClose" />
+		<SettingsPanel
+			:initial-page="settingsInitialPage"
+			:initial-setup-mode="settingsSetupMode"
+			:open="openPanelName === 'settings'"
+			@close="closePanel"
+			@interact="resetAutoClose"
+		/>
+		<PanelShell :open="onboardingOpen" @close="completeOnboarding" @interact="resetAutoClose">
+			<div class="panel-content">
+				<GettingStartedGuide
+					@skip="completeOnboarding"
+					@start="startOnboarding"
+				/>
+			</div>
+		</PanelShell>
 	</main>
 </template>
 
@@ -45,20 +60,30 @@ import { List, Plus, Settings }     from '@lucide/vue';
 import { markRaw }                  from 'vue';
 import { Component, toNative, Vue } from 'vue-facing-decorator';
 
-import HistoryPanel      from '@/components/HistoryPanel.vue';
-import NewSessionPanel   from '@/components/NewSessionPanel.vue';
-import SettingsPanel     from '@/components/settings/SettingsPanel.vue';
-import DotRingTimer      from '@/components/widgets/DotRingTimer.vue';
-import { useTimerStore } from '@/store/useTimerStore';
+import HistoryPanel          from '@/components/HistoryPanel.vue';
+import NewSessionPanel       from '@/components/NewSessionPanel.vue';
+import SettingsPanel         from '@/components/settings/SettingsPanel.vue';
+import GettingStartedGuide   from '@/components/widgets/GettingStartedGuide.vue';
+import PanelShell            from '@/components/widgets/PanelShell.vue';
+import RingTimer             from '@/components/widgets/RingTimer.vue';
+import { isDevelopmentMode } from '@/domain/AppEnvironment';
+import { useTimerStore }     from '@/store/useTimerStore';
+
+const onboardingCompleteKey = 'dose-o-clock.onboarding-complete';
 
 /**
  * Coordinates the main timer view, persistent ticking, and temporary panels.
  */
-@Component({ components : { DotRingTimer, HistoryPanel, List, NewSessionPanel, Plus, Settings, SettingsPanel } })
+@Component({
+	components : { GettingStartedGuide, HistoryPanel, List, NewSessionPanel, PanelShell, Plus, RingTimer, Settings, SettingsPanel },
+})
 class MainView extends Vue {
 
-	store         = markRaw(useTimerStore());
+	store           = markRaw(useTimerStore());
 	openPanelName: PanelName | null = null;
+	settingsInitialPage: SettingsInitialPage | null = null;
+	settingsSetupMode = false;
+	onboardingOpen     = false;
 	tickInterval: number | undefined;
 	autoCloseTimeout: number | undefined;
 
@@ -68,7 +93,8 @@ class MainView extends Vue {
 
 	mounted(): void {
 		this.store.tick();
-		this.tickInterval = window.setInterval(() => this.store.tick(), 1000);
+		this.tickInterval   = window.setInterval(() => this.store.tick(), 1000);
+		this.onboardingOpen = localStorage.getItem(onboardingCompleteKey) !== 'true';
 	}
 
 	beforeUnmount(): void {
@@ -77,26 +103,53 @@ class MainView extends Vue {
 	}
 
 	openPanel(panel: PanelName): void {
+		if (panel === 'settings') {
+			this.settingsInitialPage = null;
+			this.settingsSetupMode   = false;
+		}
+
 		this.openPanelName = panel;
 		this.resetAutoClose();
 	}
 
 	closePanel(): void {
 		this.openPanelName = null;
+		if (this.onboardingOpen) {
+			localStorage.setItem(onboardingCompleteKey, 'true');
+		}
+		this.onboardingOpen    = false;
+		this.settingsSetupMode = false;
 		window.clearTimeout(this.autoCloseTimeout);
 	}
 
 	resetAutoClose(): void {
 		window.clearTimeout(this.autoCloseTimeout);
 
-		if (this.openPanelName) {
+		if (!isDevelopmentMode && (this.openPanelName || this.onboardingOpen)) {
 			this.autoCloseTimeout = window.setTimeout(() => this.closePanel(), 10_000);
 		}
+	}
+
+	startOnboarding(): void {
+		localStorage.setItem(onboardingCompleteKey, 'true');
+		this.onboardingOpen      = false;
+		this.settingsInitialPage = 'dosage';
+		this.settingsSetupMode   = true;
+		this.openPanelName       = 'settings';
+		this.resetAutoClose();
+	}
+
+	completeOnboarding(): void {
+		localStorage.setItem(onboardingCompleteKey, 'true');
+		this.onboardingOpen    = false;
+		this.settingsSetupMode = false;
+		window.clearTimeout(this.autoCloseTimeout);
 	}
 
 }
 
 type PanelName = 'new' | 'history' | 'settings';
+type SettingsInitialPage = 'dosage' | 'install' | 'notifications';
 
 export default toNative(MainView);
 </script>

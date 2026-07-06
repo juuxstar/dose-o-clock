@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import { Dosage }              from '@/domain/Dosage';
 import { SessionNotification } from '@/domain/SessionNotification';
 import { TimerSession }        from '@/domain/TimerSession';
-import { loadState, removeSessionData, saveActiveSession, saveHistory, saveSetting, type TimerPosition } from '@/store/storage';
+import { loadState, removeSessionData, saveActiveSession, saveHistory, saveSetting, type TimerPosition, type TimerRingShape } from '@/store/storage';
 
 const initialState = loadState();
 
@@ -13,6 +13,7 @@ const defaultUnitHundredths     = ref(initialState.defaultUnitHundredths);
 const maxUnitHundredths         = ref(initialState.maxUnitHundredths);
 const dosageIncrementHundredths = ref(initialState.dosageIncrementHundredths);
 const timerPosition             = ref<TimerPosition>(initialState.timerPosition);
+const timerRingShape            = ref<TimerRingShape>(initialState.timerRingShape);
 const currentTime               = ref(new Date());
 
 const dosageValues         = computed(() => Dosage.generateValues(maxUnitHundredths.value, dosageIncrementHundredths.value));
@@ -95,6 +96,11 @@ export function useTimerStore() {
 		saveSetting('timerPosition', value);
 	}
 
+	function setTimerRingShape(value: TimerRingShape): void {
+		timerRingShape.value = value;
+		saveSetting('timerRingShape', value);
+	}
+
 	function persistSessions(): void {
 		saveActiveSession(activeSession.value);
 		saveHistory(history.value);
@@ -116,6 +122,7 @@ export function useTimerStore() {
 		maxUnitHundredths,
 		dosageIncrementHundredths,
 		timerPosition,
+		timerRingShape,
 		dosageValues,
 		maxDosageValues,
 		hasSessionData,
@@ -131,5 +138,6 @@ export function useTimerStore() {
 		setMaxDosage,
 		setDosageIncrement,
 		setTimerPosition,
+		setTimerRingShape,
 	};
 }

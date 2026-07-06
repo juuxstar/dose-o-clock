@@ -13,17 +13,30 @@ describe('storage', () => {
 		localStorage.setItem(storageKeys.maxUnitHundredths, '110');
 		localStorage.setItem(storageKeys.defaultUnitHundredths, '124');
 		localStorage.setItem(storageKeys.timerPosition, 'center');
+		localStorage.setItem(storageKeys.timerRingShape, 'bars');
 
 		expect(loadState()).toMatchObject({
 			dosageIncrementHundredths : 25,
 			maxUnitHundredths         : 100,
 			defaultUnitHundredths     : 100,
 			timerPosition             : 'center',
+			timerRingShape            : 'bars',
 		});
 	});
 
 	it('loads fresh dosage defaults', () => {
-		expect(loadState()).toMatchObject({ defaultUnitHundredths : 200, maxUnitHundredths : 500, timerPosition : 'top' });
+		expect(loadState()).toMatchObject({
+			defaultUnitHundredths : 200,
+			maxUnitHundredths     : 500,
+			timerPosition         : 'top',
+			timerRingShape        : 'dots',
+		});
+	});
+
+	it('falls back to dots for unknown timer ring shapes', () => {
+		localStorage.setItem(storageKeys.timerRingShape, 'squares');
+
+		expect(loadState()).toMatchObject({ timerRingShape : 'dots' });
 	});
 
 	it('persists active session and history', () => {

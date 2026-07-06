@@ -116,14 +116,24 @@ export class SessionNotification {
 
 	private static async getPushSubscription(registration: ServiceWorkerRegistration): Promise<PushSubscription> {
 		const existing = await registration.pushManager.getSubscription();
-		if (existing) {
+		if (existing && this.subscriptionUsesCurrentVapidKey(existing)) {
 			return existing;
 		}
 
+		await existing?.unsubscribe();
 		return registration.pushManager.subscribe({
 			applicationServerKey : base64UrlToArrayBuffer(this.vapidPublicKey()),
 			userVisibleOnly      : true,
 		});
+	}
+
+	private static subscriptionUsesCurrentVapidKey(subscription: PushSubscription): boolean {
+		const applicationServerKey = subscription.options.applicationServerKey;
+		if (!applicationServerKey) {
+			return false;
+		}
+
+		return arrayBuffersEqual(applicationServerKey, base64UrlToArrayBuffer(this.vapidPublicKey()));
 	}
 
 	private static wasNotified(sessionId: string): boolean {
@@ -184,6 +194,14 @@ function base64UrlToArrayBuffer(value: string): ArrayBuffer {
 	}
 
 	return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+}
+
+function arrayBuffersEqual(left: ArrayBuffer, right: ArrayBuffer): boolean {
+	const leftBytes  = new Uint8Array(left);
+	const rightBytes = new Uint8Array(right);
+
+	return leftBytes.byteLength === rightBytes.byteLength
+		&& leftBytes.every((value, index) => value === rightBytes[index]);
 }
 
 function createToken(): string {

@@ -11,6 +11,7 @@ const appVersion              = JSON.parse(readFileSync(fileURLToPath(new URL('.
 
 export default defineConfig(({ command, mode }) => {
 	const useLocalHttps       = command === 'serve' && mode === 'development';
+	const appEnvironment      = command === 'serve' ? 'development' : 'production';
 	const localTlsCertificate = useLocalHttps && existsSync(localTlsCertificatePath)
 		? readFileSync(localTlsCertificatePath)
 		: undefined;
@@ -18,6 +19,7 @@ export default defineConfig(({ command, mode }) => {
 
 	return {
 		define : {
+			'import.meta.env.VITE_APP_ENV'         : JSON.stringify(appEnvironment),
 			'import.meta.env.VITE_APP_VERSION'     : JSON.stringify(appVersion),
 			'import.meta.env.VITE_BUILD_TIMESTAMP' : JSON.stringify(buildTimestamp),
 		},

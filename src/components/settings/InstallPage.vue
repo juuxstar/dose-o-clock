@@ -1,7 +1,11 @@
 <template>
 	<div class="settings-page install-page u-grid u-gap-12 u-content-center">
-		<div class="capability-status u-grid u-items-center u-gap-12 u-text-left" :class="{ 'capability-status--ready' : offlineReady }">
-			<CheckCircle2 v-if="offlineReady" :size="28" aria-hidden="true" />
+		<div
+			class="capability-status u-grid u-items-center u-gap-12 u-text-left"
+			:class="offlineStatusClasses"
+		>
+			<LoaderCircle v-if="!offlineCheckComplete" :size="28" aria-hidden="true" />
+			<CheckCircle2 v-else-if="offlineReady" :size="28" aria-hidden="true" />
 			<XCircle v-else :size="28" aria-hidden="true" />
 			<div>
 				<strong>{{ offlineStatusLabel }}</strong>
@@ -22,32 +26,54 @@
 		</div>
 		<div v-if="!isStandalone" class="install-actions u-grid u-gap-14 u-justify-items-center u-text-center">
 			<button
+				v-if="!showManualInstallSteps"
 				class="primary-button primary-button--green u-flex u-items-center u-justify-center u-gap-8 u-width-100"
 				type="button"
-				:disabled="!canPromptInstall"
-				@click="$emit('install')"
+				@click="install"
 			>
 				<Plus :size="20" />
 				Add to Home Screen
 			</button>
-			<p v-if="canPromptInstall" class="u-margin-0">
-				Use this to install Dose-o-clock as a standalone app.
-			</p>
-			<p v-else class="u-margin-0">
-				Use your browser share menu, then choose Add to Home Screen.
-			</p>
+			<div v-if="showManualInstallSteps" class="manual-install-card u-grid u-gap-12 u-text-left u-width-100">
+				<p class="manual-install-note u-margin-0">
+					This device cannot add Dose-o-clock to the Home Screen automatically, but you can add it with these steps.
+				</p>
+				<ol class="manual-install-steps u-grid u-gap-12">
+					<li>
+						<span>
+							Tap the
+							<span class="share-button-image u-grid u-place-center" aria-label="Share button">
+								<Share :size="18" />
+							</span>
+							{{ shareButtonLabel }}.
+						</span>
+					</li>
+					<li>
+						Choose <span class="browser-action">View More</span> if needed.
+					</li>
+					<li>
+						Choose
+						<span class="browser-action browser-action--home-screen">
+							<span class="browser-action__icon u-grid u-place-center">
+								<Plus :size="15" />
+							</span>
+							Add to Home Screen
+						</span>.
+					</li>
+				</ol>
+			</div>
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
-import { CheckCircle2, Plus, XCircle }    from '@lucide/vue';
-import { Component, Prop, toNative, Vue } from 'vue-facing-decorator';
+import { CheckCircle2, LoaderCircle, Plus, Share, XCircle } from '@lucide/vue';
+import { Component, Prop, toNative, Vue }                   from 'vue-facing-decorator';
 
 /**
  * Shows offline and home-screen installation state.
  */
-@Component({ components : { CheckCircle2, Plus, XCircle }, emits : [ 'install' ] })
+@Component({ components : { CheckCircle2, LoaderCircle, Plus, Share, XCircle }, emits : [ 'install' ] })
 class InstallPage extends Vue {
 
 	@Prop({ type : Boolean, required : true })
@@ -64,6 +90,8 @@ class InstallPage extends Vue {
 
 	@Prop({ type : String, required : true })
 	readonly offlineStatusDetail!: string;
+
+	showManualInstallSteps = false;
 
 	get offlineStatusLabel(): string {
 		if (!this.offlineCheckComplete) {
@@ -82,6 +110,13 @@ class InstallPage extends Vue {
 		return this.offlineStatusDetail || 'Load the production app online once.';
 	}
 
+	get offlineStatusClasses(): string[] {
+		if (!this.offlineCheckComplete) {
+			return [ 'capability-status--checking' ];
+		}
+		return this.offlineReady ? [ 'capability-status--ready' ] : [];
+	}
+
 	get homeScreenStatusLabel(): string {
 		return this.isStandalone ? 'Added to Home Screen' : 'Not added to Home Screen';
 	}
@@ -90,7 +125,36 @@ class InstallPage extends Vue {
 		return this.isStandalone ? 'Running as a standalone app.' : 'Use Add to Home Screen to enable app mode.';
 	}
 
+	get shareButtonLabel(): string {
+		if (this.browserName === 'Chrome') {
+			return 'Share button in Chrome';
+		}
+		if (this.browserName === 'Safari') {
+			return 'Share button in Safari';
+		}
+		return 'browser Share button';
+	}
+
+	get browserName(): BrowserName {
+		const userAgent = navigator.userAgent;
+
+		if (/CriOS/u.test(userAgent)) {
+			return 'Chrome';
+		}
+		if (/Safari/u.test(userAgent) && !/FxiOS|EdgiOS|CriOS/u.test(userAgent)) {
+			return 'Safari';
+		}
+		return 'Browser';
+	}
+
+	install(): void {
+		this.showManualInstallSteps = !this.canPromptInstall;
+		this.$emit('install');
+	}
+
 }
+
+type BrowserName = 'Browser' | 'Chrome' | 'Safari';
 
 export default toNative(InstallPage);
 </script>
@@ -115,6 +179,11 @@ export default toNative(InstallPage);
 	color: var(--green);
 }
 
+.capability-status--checking svg {
+	animation: capability-status-spin 900ms linear infinite;
+	color: var(--blue);
+}
+
 .capability-status strong {
 	display: block;
 	margin-bottom: 3px;
@@ -129,5 +198,72 @@ export default toNative(InstallPage);
 .install-actions p {
 	color: var(--muted-text);
 	line-height: 1.35;
+}
+
+.manual-install-card {
+	border-radius: 8px;
+	background: var(--tertiary-grouped-bg);
+	padding: 14px;
+	color: var(--text);
+	font-size: var(--font-size-title);
+	line-height: 1.4;
+}
+
+.manual-install-note {
+	color: var(--muted-text);
+}
+
+.manual-install-steps {
+	margin: 0;
+	padding-left: 24px;
+}
+
+.manual-install-steps li::marker {
+	color: var(--muted-text);
+	font-weight: 800;
+}
+
+.share-button-image {
+	display: inline-grid;
+	width: 30px;
+	height: 30px;
+	margin: 0 4px;
+	border: 1px solid var(--separator);
+	border-radius: 8px;
+	background: var(--secondary-grouped-bg);
+	color: var(--blue);
+	vertical-align: middle;
+}
+
+.browser-action {
+	display: inline-grid;
+	min-height: 30px;
+	align-items: center;
+	border: 1px solid var(--separator);
+	border-radius: 8px;
+	background: var(--secondary-grouped-bg);
+	padding: 3px 8px;
+	font-weight: 700;
+	vertical-align: middle;
+}
+
+.browser-action--home-screen {
+	grid-template-columns: 24px auto;
+	gap: 8px;
+	padding-left: 4px;
+}
+
+.browser-action__icon {
+	width: 24px;
+	height: 24px;
+	border-radius: 6px;
+	background: var(--green);
+	color: #ffffff;
+}
+
+@keyframes capability-status-spin {
+	to {
+		transform: rotate(360deg);
+	}
 }
 </style>

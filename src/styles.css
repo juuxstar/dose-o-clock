@@ -157,9 +157,9 @@ button:disabled {
 	margin-bottom: 18px;
 }
 
-.panel-section h2,
-.panel-section h3,
-.panel-title {
+.panel-section h2:not(.u-margin-0),
+.panel-section h3:not(.u-margin-0),
+.panel-title:not(.u-margin-0) {
 	margin: 0 0 10px;
 	font-size: var(--font-size-title);
 	font-weight: 700;

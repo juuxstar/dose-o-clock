@@ -2,6 +2,7 @@
 	<div
 		ref="root"
 		class="dial-selector"
+		:style="centerOvalStyle"
 		@pointerdown="onPointerDown"
 		@touchstart.prevent="onTouchStart"
 		@touchmove.prevent="onTouchMove"
@@ -45,12 +46,17 @@ class DialSelector extends Vue {
 	@Prop({ type : Function, default : undefined })
 	readonly colorForValue?: ValueFormatter;
 
+	@Prop({ type : Number, default : 92 })
+	readonly centerOvalWidth!: number;
+
+	@Prop({ type : Number, default : 72 })
+	readonly itemSpacing!: number;
+
 	@Ref('root')
 	root?: HTMLElement;
 
 	dragOffset           = 0;
 	dragVelocity         = 0;
-	itemSpacing          = 72;
 	lastDragClientX      = 0;
 	lastDragAt           = 0;
 	momentumFrame        = 0;
@@ -73,6 +79,10 @@ class DialSelector extends Vue {
 
 	get selectedColor(): string | undefined {
 		return this.colorForValue?.(this.values[this.selectedIndex] ?? this.modelValue);
+	}
+
+	get centerOvalStyle(): Record<string, string> {
+		return { '--dial-selector-center-width' : `${this.centerOvalWidth}px` };
 	}
 
 	get residualDragOffset(): number {
@@ -328,7 +338,7 @@ export default toNative(DialSelector);
 	position: absolute;
 	top: 11px;
 	left: 50%;
-	width: 92px;
+	width: var(--dial-selector-center-width);
 	height: 50px;
 	border: 2px solid color-mix(in srgb, var(--text), transparent 72%);
 	border-radius: 999px;
@@ -357,7 +367,7 @@ export default toNative(DialSelector);
 
 .dial-selector__item--center {
 	z-index: 2;
-	width: 92px;
+	width: var(--dial-selector-center-width);
 	height: 50px;
 	border-radius: 999px;
 	background: var(--tertiary-grouped-bg);

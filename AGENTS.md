@@ -8,11 +8,13 @@
 - Keep the main component class first in each Vue component script after imports and decorators.
 - Move local interfaces, type declarations, constants, and helper-only declarations below the main class when they are less important than the component itself.
 - Name constants with camelCase, including exported constants.
-- Prefer existing CSS utility classes for common layout and styling needs before adding component-specific CSS.
+- Use existing CSS utility classes for common layout and styling needs before adding component-specific CSS.
 - Always choose from the shared font size CSS variables in `src/styles.css` instead of adding literal `font-size` values or new font size tokens.
 - Preserve existing project formatting, import sorting, and component patterns.
+- Do not manually fuss over aligned import spacing; let the linter handle import alignment with auto-fix.
 
 # Local Verification
 
+- Run the linter after every main change.
 - When confirming prompt results with local visual or browser tests, start the Vite dev server with `rtk npm run dev:http` so Codex can use a local HTTP server without HTTPS.
 - The HTTP dev server is configured for `http://localhost:5175`.

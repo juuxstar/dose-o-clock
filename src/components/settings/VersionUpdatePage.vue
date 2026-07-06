@@ -50,6 +50,10 @@
 				<span>Latest Build</span>
 				<strong>{{ latestBuildStamp }}</strong>
 			</div>
+			<div v-if="isDevelopmentMode" class="build-detail u-flex u-justify-between u-gap-12">
+				<span>Environment</span>
+				<strong>{{ appEnvironment }}</strong>
+			</div>
 		</div>
 	</div>
 </template>
@@ -58,6 +62,7 @@
 import { CheckCircle2, Download, RefreshCw } from '@lucide/vue';
 import { Component, Prop, toNative, Vue }    from 'vue-facing-decorator';
 
+import { appEnvironment, isDevelopmentMode } from '@/domain/AppEnvironment';
 import { checkVersionUpdate, refreshPwa, type VersionUpdateCheck, type VersionUpdateStatus } from '@/pwa';
 
 /**
@@ -73,6 +78,8 @@ class VersionUpdatePage extends Vue {
 	versionUpdateStatus   = this.initialVersionUpdateStatus;
 	latestBuildTimestamp = '';
 	latestVersion        = '';
+	appEnvironment       = appEnvironment;
+	isDevelopmentMode    = isDevelopmentMode;
 
 	get buildStamp(): string {
 		return new Intl.DateTimeFormat(undefined, { dateStyle : 'medium', timeStyle : 'short' })

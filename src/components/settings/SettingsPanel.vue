@@ -12,7 +12,7 @@
 					class="icon-only u-grid u-place-center"
 					type="button"
 					aria-label="Back"
-					@click="page = 'main'"
+					@click="goBack"
 				>
 					<ChevronLeft :size="26" />
 				</button>
@@ -20,22 +20,73 @@
 				<h2 class="u-text-center">
 					{{ title }}
 				</h2>
-				<span class="settings-header__spacer" />
+				<button
+					v-if="setupMode"
+					class="wizard-next-button"
+					type="button"
+					@click="advanceSetup"
+				>
+					{{ setupNextLabel }}
+				</button>
+				<span v-else class="settings-header__spacer" />
 			</header>
+			<p v-if="setupMode" class="setup-step-description u-text-center">
+				{{ setupStepDescription }}
+			</p>
 
 			<Transition :name="transitionName" mode="out-in">
 				<div v-if="page === 'main'" key="main" class="settings-page u-grid u-gap-12">
-					<button class="settings-row u-grid u-items-center u-gap-8 u-text-left u-width-100" type="button" @click="openPage('dosage')">
-						<span>Dosage Defaults</span>
-						<strong>{{ formatDosage(store.defaultUnitHundredths.value) }} ml</strong>
+					<button
+						v-if="!setupComplete"
+						class="settings-row settings-row--navigation u-grid u-items-center u-gap-8 u-text-left u-width-100"
+						type="button"
+						@click="startSetup"
+					>
+						<CircleHelp :size="22" aria-hidden="true" />
+						<span>Getting Started</span>
 						<ChevronRight :size="20" aria-hidden="true" />
 					</button>
-					<button class="settings-row u-grid u-items-center u-gap-8 u-text-left u-width-100" type="button" @click="openPage('graphics')">
-						<span>Graphics</span>
-						<strong>{{ graphicsLabel }}</strong>
+					<button
+						class="settings-row settings-row--navigation u-grid u-items-center u-gap-8 u-text-left u-width-100"
+						type="button"
+						@click="openPage('dosage')"
+					>
+						<SlidersHorizontal :size="22" aria-hidden="true" />
+						<span>Dosage Setup</span>
 						<ChevronRight :size="20" aria-hidden="true" />
 					</button>
+					<button
+						class="settings-row settings-row--navigation u-grid u-items-center u-gap-8 u-text-left u-width-100"
+						type="button"
+						@click="openPage('app')"
+					>
+						<Smartphone :size="22" aria-hidden="true" />
+						<span>App Setup</span>
+						<ChevronRight :size="20" aria-hidden="true" />
+					</button>
+					<button
+						class="settings-row settings-row--navigation u-grid u-items-center u-gap-8 u-text-left u-width-100"
+						type="button"
+						@click="openPage('display')"
+					>
+						<Palette :size="22" aria-hidden="true" />
+						<span>Display</span>
+						<ChevronRight :size="20" aria-hidden="true" />
+					</button>
+					<button
+						class="settings-row settings-row--navigation u-grid u-items-center u-gap-8 u-text-left u-width-100"
+						type="button"
+						@click="openPage('share')"
+					>
+						<Share2 :size="22" aria-hidden="true" />
+						<span>Share with a friend</span>
+						<ChevronRight :size="20" aria-hidden="true" />
+					</button>
+				</div>
+
+				<div v-else-if="page === 'app'" key="app" class="settings-page u-grid u-gap-12">
 					<button class="settings-row u-grid u-items-center u-gap-8 u-text-left u-width-100" type="button" @click="openPage('install')">
+						<Home :size="22" aria-hidden="true" />
 						<span>Add to Home Screen</span>
 						<strong>{{ installLabel }}</strong>
 						<ChevronRight :size="20" aria-hidden="true" />
@@ -45,13 +96,9 @@
 						type="button"
 						@click="openPage('notifications')"
 					>
+						<Bell :size="22" aria-hidden="true" />
 						<span>Notifications</span>
 						<strong>{{ notificationLabel }}</strong>
-						<ChevronRight :size="20" aria-hidden="true" />
-					</button>
-					<button class="settings-row u-grid u-items-center u-gap-8 u-text-left u-width-100" type="button" @click="openPage('share')">
-						<span>Share</span>
-						<strong>QR Code</strong>
 						<ChevronRight :size="20" aria-hidden="true" />
 					</button>
 					<button
@@ -60,15 +107,26 @@
 						type="button"
 						@click="openPage('version')"
 					>
+						<RefreshCw :size="22" aria-hidden="true" />
 						<span>Version Update</span>
 						<strong>{{ versionUpdateLabel }}</strong>
 						<ChevronRight :size="20" aria-hidden="true" />
 					</button>
+					<button
+						v-if="setupComplete"
+						class="settings-row settings-row--navigation u-grid u-items-center u-gap-8 u-text-left u-width-100"
+						type="button"
+						@click="startSetup"
+					>
+						<CircleHelp :size="22" aria-hidden="true" />
+						<span>Getting Started</span>
+						<ChevronRight :size="20" aria-hidden="true" />
+					</button>
 				</div>
 
-				<DosagePage v-else-if="page === 'dosage'" key="dosage" @interact="$emit('interact')" />
+				<GraphicsPage v-else-if="page === 'display'" key="display" />
 
-				<GraphicsPage v-else-if="page === 'graphics'" key="graphics" />
+				<DosagePage v-else-if="page === 'dosage'" key="dosage" @interact="$emit('interact')" />
 
 				<InstallPage
 					v-else-if="page === 'install'"
@@ -104,8 +162,8 @@
 </template>
 
 <script lang="ts">
-import { ChevronLeft, ChevronRight } from '@lucide/vue';
-import { markRaw }                   from 'vue';
+import { Bell, ChevronLeft, ChevronRight, CircleHelp, Home, Palette, RefreshCw, Share2, SlidersHorizontal, Smartphone } from '@lucide/vue';
+import { markRaw } from 'vue';
 import { Component, Emit, Prop, toNative, Vue, Watch } from 'vue-facing-decorator';
 
 import DosagePage        from '@/components/settings/DosagePage.vue';
@@ -125,14 +183,22 @@ import { useTimerStore } from '@/store/useTimerStore';
  */
 @Component({
 	components : {
+		Bell,
 		ChevronLeft,
 		ChevronRight,
+		CircleHelp,
 		DosagePage,
 		GraphicsPage,
+		Home,
 		InstallPage,
 		NotificationsPage,
+		Palette,
 		PanelShell,
+		RefreshCw,
 		SharePage,
+		Share2,
+		SlidersHorizontal,
+		Smartphone,
 		VersionUpdatePage,
 	},
 	emits : [ 'close', 'interact' ],
@@ -142,8 +208,16 @@ class SettingsPanel extends Vue {
 	@Prop({ type : Boolean, required : true })
 	readonly open!: boolean;
 
+	@Prop({ type : String, default : null })
+	readonly initialPage!: SettingsInitialPage | null;
+
+	@Prop({ type : Boolean, default : false })
+	readonly initialSetupMode!: boolean;
+
 	store           = markRaw(useTimerStore());
 	page: Page      = 'main';
+	setupMode       = false;
+	setupComplete   = false;
 	transitionName  = 'settings-forward';
 	formatDosage    = Dosage.format;
 
@@ -158,8 +232,9 @@ class SettingsPanel extends Vue {
 	get title(): string {
 		return {
 			// Mapping page names to titles
+			app           : 'App Setup',
+			display       : 'Display',
 			dosage        : 'Dosage',
-			graphics      : 'Graphics',
 			install       : 'Add to Home Screen',
 			main          : 'Settings',
 			notifications : 'Notifications',
@@ -168,12 +243,20 @@ class SettingsPanel extends Vue {
 		}[this.page];
 	}
 
-	get graphicsLabel(): string {
-		return this.timerPositionLabel;
+	get setupNextLabel(): string {
+		return this.isLastSetupStep ? 'Done' : 'Next';
 	}
 
-	get timerPositionLabel(): string {
-		return this.store.timerPosition.value === 'center' ? 'Center' : 'Top';
+	get setupStepDescription(): string {
+		return setupStepDescriptions[this.page as SetupPage] ?? '';
+	}
+
+	get isLastSetupStep(): boolean {
+		return this.setupStepIndex === setupPages.length - 1;
+	}
+
+	get setupStepIndex(): number {
+		return setupPages.indexOf(this.page as SetupPage);
 	}
 
 	get canPromptInstall(): boolean {
@@ -221,11 +304,21 @@ class SettingsPanel extends Vue {
 	@Watch('open')
 	onOpenChanged(open: boolean): void {
 		if (open) {
-			this.page = 'main';
+			this.setupComplete = localStorage.getItem(setupCompleteKey) === 'true';
+			this.setupMode     = this.initialSetupMode;
+			this.page          = this.initialSetupMode ? setupPages[0] : this.initialPage ?? 'main';
 			this.refreshStandaloneState();
 			this.refreshNotificationStatus();
 			void this.refreshOfflineState();
 			void this.refreshVersionUpdateStatus();
+		}
+	}
+
+	@Watch('initialPage')
+	onInitialPageChanged(initialPage: SettingsInitialPage | null): void {
+		if (this.open && initialPage) {
+			this.setupMode = this.initialSetupMode;
+			this.page      = initialPage;
 		}
 	}
 
@@ -244,15 +337,76 @@ class SettingsPanel extends Vue {
 		this.versionUpdateStatus = status;
 	}
 
+	goBack(): void {
+		if (this.setupMode) {
+			this.goToPreviousSetupStep();
+			return;
+		}
+
+		this.transitionName = 'settings-forward';
+		this.page           = parentPageByPage[this.page] ?? 'main';
+	}
+
 	openPage(nextPage: Page): void {
+		if (!this.setupMode || !isSetupPage(nextPage)) {
+			this.setupMode = false;
+		}
+
 		this.transitionName = 'settings-forward';
 		this.page           = nextPage;
 
-		if (nextPage === 'install') {
+		this.refreshPageState(nextPage);
+	}
+
+	startSetup(): void {
+		this.setupMode      = true;
+		this.transitionName = 'settings-forward';
+		this.page           = setupPages[0];
+		this.refreshPageState(this.page);
+	}
+
+	advanceSetup(): void {
+		const nextIndex = this.setupStepIndex + 1;
+		if (nextIndex >= setupPages.length) {
+			this.finishSetup();
+			return;
+		}
+
+		this.transitionName = 'settings-forward';
+		this.page           = setupPages[nextIndex];
+		this.refreshPageState(this.page);
+	}
+
+	goToPreviousSetupStep(): void {
+		const previousIndex = this.setupStepIndex - 1;
+		if (previousIndex < 0) {
+			this.cancelSetup();
+			return;
+		}
+
+		this.transitionName = 'settings-forward';
+		this.page           = setupPages[previousIndex];
+		this.refreshPageState(this.page);
+	}
+
+	cancelSetup(): void {
+		this.setupMode      = false;
+		this.transitionName = 'settings-forward';
+		this.page           = 'main';
+	}
+
+	finishSetup(): void {
+		localStorage.setItem(setupCompleteKey, 'true');
+		this.setupComplete = true;
+		this.cancelSetup();
+	}
+
+	refreshPageState(page: Page): void {
+		if (page === 'install') {
 			void this.refreshOfflineState();
 		}
 
-		if (nextPage === 'notifications') {
+		if (page === 'notifications') {
 			this.refreshNotificationStatus();
 		}
 	}
@@ -365,16 +519,46 @@ interface BeforeInstallPromptEvent extends Event {
 	userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
 }
 
-type Page = 'main' | SettingsPageName;
+type Page = 'main' | SettingsGroupPageName | SettingsPageName;
 
-type SettingsPageName = 'dosage' | 'graphics' | 'install' | 'notifications' | 'share' | 'version';
+type SettingsInitialPage = SetupPage;
+
+type SettingsGroupPageName = 'app' | 'display';
+
+type SettingsPageName = 'dosage' | 'install' | 'notifications' | 'share' | 'version';
+
+type SetupPage = 'dosage' | 'install' | 'notifications';
+
+const setupPages: SetupPage[] = [ 'dosage', 'install', 'notifications' ];
+
+const setupStepDescriptions: Record<SetupPage, string> = {
+	dosage        : 'Choose the default dose options you want ready each time you start a new timer.',
+	install       : 'Add Dose-o-clock to your Home Screen so it opens like an app and is easier to find.',
+	notifications : 'Set up completion alerts so the app can let you know when a timer finishes.',
+};
+
+const setupCompleteKey = 'dose-o-clock.setup-complete';
+
+const parentPageByPage: Partial<Record<Page, Page>> = {
+	app           : 'main',
+	display       : 'main',
+	dosage        : 'main',
+	install       : 'app',
+	notifications : 'app',
+	share         : 'main',
+	version       : 'app',
+};
+
+function isSetupPage(page: Page): page is SetupPage {
+	return setupPages.includes(page as SetupPage);
+}
 
 export default toNative(SettingsPanel);
 </script>
 
 <style scoped>
 .settings-header {
-	grid-template-columns: 44px 1fr 44px;
+	grid-template-columns: 64px 1fr 64px;
 	margin-bottom: 14px;
 }
 
@@ -392,15 +576,34 @@ export default toNative(SettingsPanel);
 }
 
 .settings-header__spacer {
-	width: 44px;
+	width: 64px;
+}
+
+.setup-step-description {
+	margin: -4px 8px 14px;
+	color: var(--muted-text);
+	font-size: var(--font-size-body);
+	line-height: 1.35;
+}
+
+.wizard-next-button {
+	min-height: 38px;
+	border-radius: 8px;
+	background: transparent;
+	color: var(--blue);
+	font-weight: 800;
 }
 
 .settings-row {
 	min-height: 54px;
-	grid-template-columns: 1fr auto 20px;
+	grid-template-columns: 28px 1fr auto 20px;
 	border-radius: 8px;
 	background: var(--tertiary-grouped-bg);
 	padding: 0 14px;
+}
+
+.settings-row--navigation {
+	grid-template-columns: 28px 1fr 20px;
 }
 
 .settings-row strong {
@@ -408,7 +611,7 @@ export default toNative(SettingsPanel);
 }
 
 .settings-row svg {
-	color: var(--muted-text);
+	color: var(--blue);
 }
 
 .settings-row--available strong {

@@ -1,5 +1,5 @@
 <template>
-	<canvas ref="canvas" class="dot-ring-timer" aria-label="Elapsed timer visualization" />
+	<canvas ref="canvas" class="ring-timer" aria-label="Elapsed timer visualization" />
 </template>
 
 <script lang="ts">
@@ -11,13 +11,16 @@ import { maxElapsedSeconds } from '@/domain/TimerSession';
  * Renders elapsed time as one duration-scaled progress ring on a responsive canvas.
  */
 @Component
-class DotRingTimer extends Vue {
+class RingTimer extends Vue {
 
 	@Prop({ type : Number, required : true })
 	readonly elapsedSeconds!: number;
 
 	@Prop({ type : Number, default : maxElapsedSeconds })
 	readonly durationSeconds!: number;
+
+	@Prop({ type : String, default : 'dots' })
+	readonly ringShape!: TimerRingShape;
 
 	@Ref('canvas')
 	canvas?: HTMLCanvasElement;
@@ -40,6 +43,7 @@ class DotRingTimer extends Vue {
 
 	@Watch('elapsedSeconds')
 	@Watch('durationSeconds')
+	@Watch('ringShape')
 	onTimerInputChanged(): void {
 		this.draw();
 	}
@@ -69,6 +73,11 @@ class DotRingTimer extends Vue {
 		const center        = size / 2;
 		const baseDotRadius = Math.max(3, size * 0.011);
 		const outerRadius   = size * 0.43;
+		const dartLength    = baseDotRadius * 5.2;
+		const dartWidth     = baseDotRadius * 3.2;
+		const diamondSize   = baseDotRadius * 4.2;
+		const barLength     = baseDotRadius * 5.8;
+		const barWidth      = baseDotRadius * 2.3;
 		const duration      = Math.max(1, this.durationSeconds);
 		const elapsed       = Math.max(this.elapsedSeconds, 0);
 		const secondsPerDot = duration / dotsPerRing;
@@ -79,16 +88,78 @@ class DotRingTimer extends Vue {
 			const dotStartSecond = dot * secondsPerDot;
 			const progress       = elapsed >= duration ? 1 : this.clamp((elapsed - dotStartSecond) / secondsPerDot, 0, 1);
 			const isCardinal     = dot % 15 === 0;
-			const dotRadius      = baseDotRadius * 2 * (isCardinal ? 1.28 : 1);
-			const activeColor    = this.activeDotColor(dot, elapsed, duration);
+			const shapeScale     = isCardinal ? cardinalScale : 1;
+			const dotRadius      = baseDotRadius * 2 * shapeScale;
+			const activeColor    = this.activeColor(dot, elapsed, duration);
 			context.fillStyle    = progress > 0 ? this.mixCss(inactive, activeColor, progress) : inactive;
-			context.beginPath();
-			context.arc(center + Math.cos(angle) * outerRadius, center + Math.sin(angle) * outerRadius, dotRadius, 0, Math.PI * 2);
-			context.fill();
+
+			if (this.ringShape === 'darts') {
+				this.drawDart(context, center, outerRadius, angle, dartLength * shapeScale, dartWidth * shapeScale);
+			}
+			else if (this.ringShape === 'diamond') {
+				this.drawDiamond(context, center, outerRadius, angle, diamondSize * shapeScale);
+			}
+			else if (this.ringShape === 'bars') {
+				this.drawBar(context, center, outerRadius, angle, barLength * shapeScale, barWidth * shapeScale);
+			}
+			else {
+				context.beginPath();
+				context.arc(center + Math.cos(angle) * outerRadius, center + Math.sin(angle) * outerRadius, dotRadius, 0, Math.PI * 2);
+				context.fill();
+			}
 		}
 	}
 
-	activeDotColor(dot: number, elapsed: number, duration: number): string {
+	drawDart(context: CanvasRenderingContext2D, center: number, radius: number, angle: number, length: number, width: number): void {
+		const outerX      = center + Math.cos(angle) * radius;
+		const outerY      = center + Math.sin(angle) * radius;
+		const inwardAngle = angle + Math.PI;
+
+		context.save();
+		context.translate(outerX, outerY);
+		context.rotate(inwardAngle);
+		context.beginPath();
+		context.moveTo(length / 2, 0);
+		context.lineTo(-length / 2, -width / 2);
+		context.lineTo(-length / 2, width / 2);
+		context.closePath();
+		context.fill();
+		context.restore();
+	}
+
+	drawDiamond(context: CanvasRenderingContext2D, center: number, radius: number, angle: number, size: number): void {
+		const outerX      = center + Math.cos(angle) * radius;
+		const outerY      = center + Math.sin(angle) * radius;
+		const inwardAngle = angle + Math.PI;
+
+		context.save();
+		context.translate(outerX, outerY);
+		context.rotate(inwardAngle);
+		context.beginPath();
+		context.moveTo(size / 2, 0);
+		context.lineTo(0, -size / 2);
+		context.lineTo(-size / 2, 0);
+		context.lineTo(0, size / 2);
+		context.closePath();
+		context.fill();
+		context.restore();
+	}
+
+	drawBar(context: CanvasRenderingContext2D, center: number, radius: number, angle: number, length: number, width: number): void {
+		const outerX      = center + Math.cos(angle) * radius;
+		const outerY      = center + Math.sin(angle) * radius;
+		const inwardAngle = angle + Math.PI;
+
+		context.save();
+		context.translate(outerX, outerY);
+		context.rotate(inwardAngle);
+		context.beginPath();
+		context.rect(-length / 2, -width / 2, length, width);
+		context.fill();
+		context.restore();
+	}
+
+	activeColor(dot: number, elapsed: number, duration: number): string {
 		const baseColor        = this.progressColor(dot / (dotsPerRing - 1));
 		const overtimeProgress = this.clamp((elapsed - duration) / duration, 0, 1);
 		const dotGreenProgress = this.clamp((overtimeProgress - dot / dotsPerRing) * dotsPerRing, 0, 1);
@@ -133,18 +204,20 @@ class DotRingTimer extends Vue {
 
 }
 
-const red         = { r : 255, g : 46, b : 31 };
-const yellow      = { r : 255, g : 214, b : 0 };
-const green       = { r : 41, g : 184, b : 71 };
-const dotsPerRing = 60;
+const red           = { r : 255, g : 46, b : 31 };
+const yellow        = { r : 255, g : 214, b : 0 };
+const green         = { r : 41, g : 184, b : 71 };
+const dotsPerRing   = 60;
+const cardinalScale = 1.36;
 
 type TimerColor = typeof red;
+type TimerRingShape = 'dots' | 'darts' | 'diamond' | 'bars';
 
-export default toNative(DotRingTimer);
+export default toNative(RingTimer);
 </script>
 
 <style scoped>
-.dot-ring-timer {
+.ring-timer {
 	display: block;
 	width: min(calc(100vw - 16px), calc(50dvh - 16px), 440px);
 	aspect-ratio: 1;

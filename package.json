@@ -10,7 +10,8 @@
     "build": "vue-tsc --noEmit && tsc -p tsconfig.worker.json --noEmit && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "tests": "vitest run"
   },
   "dependencies": {
     "@lucide/vue": "^1.18.0",

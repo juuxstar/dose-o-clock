@@ -1,22 +1,34 @@
 <template>
 	<div class="settings-page u-grid u-gap-12">
-		<label class="field-label">Timer Position</label>
-		<div class="segmented u-grid u-gap-4" role="group" aria-label="Timer Position">
-			<button
-				type="button"
-				:class="{ active : store.timerPosition.value === 'top' }"
-				@click="store.setTimerPosition('top')"
-			>
-				Top
-			</button>
-			<button
-				type="button"
-				:class="{ active : store.timerPosition.value === 'center' }"
-				@click="store.setTimerPosition('center')"
-			>
-				Center
-			</button>
-		</div>
+		<section class="panel-section u-grid u-gap-10">
+			<h3 class="u-margin-0 u-text-center">
+				Timer Position
+			</h3>
+			<DialSelector
+				:model-value="timerPositionValue"
+				:values="timerPositionValues"
+				:format="formatTimerPosition"
+				:center-oval-width="116"
+				:item-spacing="116"
+				@update:model-value="setTimerPositionValue"
+				@interact="$emit('interact')"
+			/>
+		</section>
+
+		<section class="panel-section u-grid u-gap-10">
+			<h3 class="u-margin-0 u-text-center">
+				Timer Ring Style
+			</h3>
+			<DialSelector
+				:model-value="timerRingShapeValue"
+				:values="timerRingShapeValues"
+				:format="formatTimerRingShape"
+				:center-oval-width="132"
+				:item-spacing="132"
+				@update:model-value="setTimerRingShapeValue"
+				@interact="$emit('interact')"
+			/>
+		</section>
 	</div>
 </template>
 
@@ -24,46 +36,77 @@
 import { markRaw }                  from 'vue';
 import { Component, toNative, Vue } from 'vue-facing-decorator';
 
-import { useTimerStore } from '@/store/useTimerStore';
+import DialSelector                           from '@/components/widgets/DialSelector.vue';
+import type { TimerPosition, TimerRingShape } from '@/store/storage';
+import { useTimerStore }                      from '@/store/useTimerStore';
 
 /**
  * Edits display options for the active timer.
  */
-@Component
+@Component({ components : { DialSelector }, emits : [ 'interact' ] })
 class GraphicsPage extends Vue {
 
 	store = markRaw(useTimerStore());
+	timerPositionValues = timerPositionOptions.map(option => option.value);
+	timerRingShapeValues = timerRingShapeOptions.map(option => option.value);
 
+	get timerPositionValue(): number {
+		return timerPositionOptions.find(option => option.position === this.store.timerPosition.value)?.value ?? timerPositionOptions[0].value;
+	}
+
+	get timerRingShapeValue(): number {
+		return timerRingShapeOptions.find(option => option.shape === this.store.timerRingShape.value)?.value ?? timerRingShapeOptions[0].value;
+	}
+
+	formatTimerPosition(value: number): string {
+		return timerPositionOptions.find(option => option.value === value)?.label ?? '';
+	}
+
+	formatTimerRingShape(value: number): string {
+		return timerRingShapeOptions.find(option => option.value === value)?.label ?? '';
+	}
+
+	setTimerPositionValue(value: number): void {
+		const position = timerPositionOptions.find(option => option.value === value)?.position;
+
+		if (position) {
+			this.store.setTimerPosition(position);
+		}
+	}
+
+	setTimerRingShapeValue(value: number): void {
+		const shape = timerRingShapeOptions.find(option => option.value === value)?.shape;
+
+		if (shape) {
+			this.store.setTimerRingShape(shape);
+		}
+	}
+
+}
+
+const timerPositionOptions: TimerPositionOption[] = [
+	{ value : 0, label : 'Top', position : 'top' },
+	{ value : 1, label : 'Center', position : 'center' },
+];
+
+const timerRingShapeOptions: TimerRingShapeOption[] = [
+	{ value : 0, label : 'Dots', shape : 'dots' },
+	{ value : 1, label : 'Darts', shape : 'darts' },
+	{ value : 2, label : 'Diamond', shape : 'diamond' },
+	{ value : 3, label : 'Bars', shape : 'bars' },
+];
+
+interface TimerPositionOption {
+	label: string;
+	position: TimerPosition;
+	value: number;
+}
+
+interface TimerRingShapeOption {
+	label: string;
+	shape: TimerRingShape;
+	value: number;
 }
 
 export default toNative(GraphicsPage);
 </script>
-
-<style scoped>
-.field-label {
-	color: var(--muted-text);
-	font-size: var(--font-size-body);
-	font-weight: 700;
-}
-
-.segmented {
-	grid-template-columns: repeat(2, 1fr);
-	border-radius: 8px;
-	background: var(--tertiary-grouped-bg);
-	padding: 4px;
-}
-
-.segmented button {
-	min-height: 42px;
-	border-radius: 6px;
-	background: transparent;
-	font-weight: 800;
-	color: var(--muted-text);
-}
-
-.segmented button.active {
-	background: var(--secondary-grouped-bg);
-	color: var(--text);
-	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
-}
-</style>
