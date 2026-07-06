@@ -47,7 +47,7 @@
 				</div>
 			</div>
 
-			<Transition name="panel-backdrop">
+			<Transition name="history-reset-backdrop">
 				<div v-if="resetModalOpen" class="history-reset-modal-backdrop u-flex" @click.self="closeResetModal">
 					<section
 						class="history-reset-modal u-flex u-flex-column u-justify-center u-gap-14 u-text-center u-width-100"
@@ -237,6 +237,11 @@ export default toNative(HistoryPanel);
 	width: 44px;
 }
 
+.history-title {
+	font-size: var(--font-size-title);
+	font-weight: 700;
+}
+
 .history-reset-button {
 	width: 44px;
 	height: 38px;
@@ -306,13 +311,13 @@ export default toNative(HistoryPanel);
 	color: #ffffff;
 }
 
-.panel-backdrop-enter-active,
-.panel-backdrop-leave-active {
+.history-reset-backdrop-enter-active,
+.history-reset-backdrop-leave-active {
 	transition: opacity 260ms ease;
 }
 
-.panel-backdrop-enter-from,
-.panel-backdrop-leave-to {
+.history-reset-backdrop-enter-from,
+.history-reset-backdrop-leave-to {
 	opacity: 0;
 }
 </style>

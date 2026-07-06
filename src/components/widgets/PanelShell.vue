@@ -76,14 +76,20 @@ export default toNative(PanelShell);
 	background: var(--separator);
 }
 
-.panel-backdrop-enter-active,
-.panel-backdrop-leave-active {
-	transition: opacity 260ms ease;
+.panel-backdrop-enter-active {
+	transition: background-color 260ms ease;
 }
 
-.panel-backdrop-enter-active .panel-shell,
-.panel-backdrop-leave-active .panel-shell {
+.panel-backdrop-leave-active {
+	transition: background-color 420ms ease;
+}
+
+.panel-backdrop-enter-active .panel-shell {
 	transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.panel-backdrop-leave-active .panel-shell {
+	transition: transform 420ms cubic-bezier(0.32, 0, 0.67, 0);
 }
 
 .panel-backdrop-enter-from .panel-shell,
@@ -93,7 +99,7 @@ export default toNative(PanelShell);
 
 .panel-backdrop-enter-from,
 .panel-backdrop-leave-to {
-	opacity: 0;
+	background-color: rgba(0, 0, 0, 0);
 }
 
 @media (min-width: 700px) {
