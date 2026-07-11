@@ -30,7 +30,7 @@
 				</button>
 				<span v-else class="settings-header__spacer" />
 			</header>
-			<p v-if="setupMode" class="setup-step-description u-text-center">
+			<p v-if="setupMode && setupStepDescription" class="setup-step-description u-text-center">
 				{{ setupStepDescription }}
 			</p>
 
@@ -82,6 +82,16 @@
 						<span>Share with a friend</span>
 						<ChevronRight :size="20" aria-hidden="true" />
 					</button>
+					<button
+						v-if="isDevelopmentMode"
+						class="settings-row settings-row--navigation u-grid u-items-center u-gap-8 u-text-left u-width-100"
+						type="button"
+						@click="openPage('devTools')"
+					>
+						<Wrench :size="22" aria-hidden="true" />
+						<span>Dev Tools</span>
+						<ChevronRight :size="20" aria-hidden="true" />
+					</button>
 				</div>
 
 				<div v-else-if="page === 'app'" key="app" class="settings-page u-grid u-gap-12">
@@ -124,6 +134,10 @@
 					</button>
 				</div>
 
+				<DisplayGuidePage v-else-if="page === 'displayGuide'" key="displayGuide" />
+
+				<TimerRingGuidePage v-else-if="page === 'timer'" key="timer" />
+
 				<GraphicsPage v-else-if="page === 'display'" key="display" />
 
 				<DosagePage v-else-if="page === 'dosage'" key="dosage" @interact="$emit('interact')" />
@@ -149,6 +163,8 @@
 
 				<SharePage v-else-if="page === 'share'" key="share" />
 
+				<DevToolsPage v-else-if="page === 'devTools'" key="devTools" @interact="$emit('interact')" />
+
 				<VersionUpdatePage
 					v-else
 					key="version"
@@ -162,21 +178,25 @@
 </template>
 
 <script lang="ts">
-import { Bell, ChevronLeft, ChevronRight, CircleHelp, Home, Palette, RefreshCw, Share2, SlidersHorizontal, Smartphone } from '@lucide/vue';
+import { Bell, ChevronLeft, ChevronRight, CircleHelp, Home, Palette, RefreshCw, Share2, SlidersHorizontal, Smartphone, Wrench } from '@lucide/vue';
 import { markRaw } from 'vue';
 import { Component, Emit, Prop, toNative, Vue, Watch } from 'vue-facing-decorator';
 
-import DosagePage        from '@/components/settings/DosagePage.vue';
-import GraphicsPage      from '@/components/settings/GraphicsPage.vue';
-import InstallPage       from '@/components/settings/InstallPage.vue';
-import NotificationsPage from '@/components/settings/NotificationsPage.vue';
-import SharePage         from '@/components/settings/SharePage.vue';
-import VersionUpdatePage from '@/components/settings/VersionUpdatePage.vue';
-import PanelShell        from '@/components/widgets/PanelShell.vue';
-import { Dosage }        from '@/domain/Dosage';
+import DevToolsPage          from '@/components/settings/DevToolsPage.vue';
+import DisplayGuidePage      from '@/components/settings/DisplayGuidePage.vue';
+import DosagePage            from '@/components/settings/DosagePage.vue';
+import GraphicsPage          from '@/components/settings/GraphicsPage.vue';
+import InstallPage           from '@/components/settings/InstallPage.vue';
+import NotificationsPage     from '@/components/settings/NotificationsPage.vue';
+import SharePage             from '@/components/settings/SharePage.vue';
+import TimerRingGuidePage    from '@/components/settings/TimerRingGuidePage.vue';
+import VersionUpdatePage     from '@/components/settings/VersionUpdatePage.vue';
+import PanelShell            from '@/components/widgets/PanelShell.vue';
+import { isDevelopmentMode } from '@/domain/AppEnvironment';
+import { Dosage }            from '@/domain/Dosage';
 import { SessionNotification, type SessionNotificationStatus } from '@/domain/SessionNotification';
 import { checkVersionUpdate, type VersionUpdateStatus }        from '@/pwa';
-import { useTimerStore } from '@/store/useTimerStore';
+import { useTimerStore }     from '@/store/useTimerStore';
 
 /**
  * Owns the settings flows for defaults, graphics, install status, and app sharing.
@@ -187,6 +207,8 @@ import { useTimerStore } from '@/store/useTimerStore';
 		ChevronLeft,
 		ChevronRight,
 		CircleHelp,
+		DevToolsPage,
+		DisplayGuidePage,
 		DosagePage,
 		GraphicsPage,
 		Home,
@@ -199,7 +221,9 @@ import { useTimerStore } from '@/store/useTimerStore';
 		Share2,
 		SlidersHorizontal,
 		Smartphone,
+		TimerRingGuidePage,
 		VersionUpdatePage,
+		Wrench,
 	},
 	emits : [ 'close', 'interact' ],
 })
@@ -220,6 +244,7 @@ class SettingsPanel extends Vue {
 	setupComplete   = false;
 	transitionName  = 'settings-forward';
 	formatDosage    = Dosage.format;
+	isDevelopmentMode = isDevelopmentMode;
 
 	deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
 	isStandalone         = false;
@@ -233,12 +258,15 @@ class SettingsPanel extends Vue {
 		return {
 			// Mapping page names to titles
 			app           : 'App Setup',
+			devTools      : 'Dev Tools',
+			displayGuide  : 'Display Options',
 			display       : 'Display',
 			dosage        : 'Dosage',
 			install       : 'Add to Home Screen',
 			main          : 'Settings',
 			notifications : 'Notifications',
 			share         : 'Sharing is Caring',
+			timer         : 'Timer Ring',
 			version       : 'Version Update',
 		}[this.page];
 	}
@@ -525,27 +553,32 @@ type SettingsInitialPage = SetupPage;
 
 type SettingsGroupPageName = 'app' | 'display';
 
-type SettingsPageName = 'dosage' | 'install' | 'notifications' | 'share' | 'version';
+type SettingsPageName = 'devTools' | 'displayGuide' | 'dosage' | 'install' | 'notifications' | 'share' | 'timer' | 'version';
 
-type SetupPage = 'dosage' | 'install' | 'notifications';
+type SetupPage = 'displayGuide' | 'dosage' | 'install' | 'notifications' | 'timer';
 
-const setupPages: SetupPage[] = [ 'dosage', 'install', 'notifications' ];
+const setupPages: SetupPage[] = [ 'dosage', 'timer', 'install', 'notifications', 'displayGuide' ];
 
 const setupStepDescriptions: Record<SetupPage, string> = {
+	displayGuide  : '',
 	dosage        : 'Choose the default dose options you want ready each time you start a new timer.',
 	install       : 'Add Dose-o-clock to your Home Screen so it opens like an app and is easier to find.',
 	notifications : 'Set up completion alerts so the app can let you know when a timer finishes.',
+	timer         : 'After adding a new timer, the timer ring changes from a fresh start through completion and overtime.',
 };
 
 const setupCompleteKey = 'dose-o-clock.setup-complete';
 
 const parentPageByPage: Partial<Record<Page, Page>> = {
 	app           : 'main',
+	devTools      : 'main',
 	display       : 'main',
+	displayGuide  : 'main',
 	dosage        : 'main',
 	install       : 'app',
 	notifications : 'app',
 	share         : 'main',
+	timer         : 'main',
 	version       : 'app',
 };
 

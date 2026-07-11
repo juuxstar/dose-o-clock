@@ -23,6 +23,9 @@ class RingTimer extends Vue {
 	@Prop({ type : String, default : 'dots' })
 	readonly ringShape!: TimerRingShape;
 
+	@Prop({ type : Number, default : 60 })
+	readonly ringSegments!: number;
+
 	@Ref('canvas')
 	canvas?: HTMLCanvasElement;
 
@@ -45,6 +48,7 @@ class RingTimer extends Vue {
 	@Watch('elapsedSeconds')
 	@Watch('durationSeconds')
 	@Watch('ringShape')
+	@Watch('ringSegments')
 	onTimerInputChanged(): void {
 		this.draw();
 	}
@@ -72,7 +76,7 @@ class RingTimer extends Vue {
 		context.clearRect(0, 0, size, size);
 
 		const center        = size / 2;
-		const baseDotRadius = Math.max(3, size * 0.011);
+		const baseDotRadius = Math.max(1.2, size * 0.011);
 		const outerRadius   = size * 0.43;
 		const dartLength    = baseDotRadius * 5.2;
 		const dartWidth     = baseDotRadius * 3.2;
@@ -82,12 +86,13 @@ class RingTimer extends Vue {
 		const capsuleLength = baseDotRadius * 6.4;
 		const capsuleWidth  = baseDotRadius * 2.9;
 		const tickLength    = baseDotRadius * 6.3;
-		const tickWidth     = Math.max(2, baseDotRadius * 0.95);
+		const tickWidth     = Math.max(1, baseDotRadius * 0.95);
 		const petalLength   = baseDotRadius * 6.2;
 		const petalWidth    = baseDotRadius * 3.8;
 		const duration      = Math.max(1, this.durationSeconds);
 		const elapsed       = Math.max(this.elapsedSeconds, 0);
-		const secondsPerDot = duration / dotsPerRing;
+		const ringSegments  = Math.max(1, Math.round(this.ringSegments));
+		const secondsPerDot = duration / ringSegments;
 		const inactive      = getComputedStyle(document.documentElement).getPropertyValue('--dot-inactive').trim();
 
 		if (this.ringShape === 'minimal') {
@@ -95,14 +100,14 @@ class RingTimer extends Vue {
 			return;
 		}
 
-		for (let dot = 0; dot < dotsPerRing; dot += 1) {
-			const angle          = -Math.PI / 2 + (dot / dotsPerRing) * Math.PI * 2;
+		for (let dot = 0; dot < ringSegments; dot += 1) {
+			const angle          = -Math.PI / 2 + (dot / ringSegments) * Math.PI * 2;
 			const dotStartSecond = dot * secondsPerDot;
 			const progress       = elapsed >= duration ? 1 : this.clamp((elapsed - dotStartSecond) / secondsPerDot, 0, 1);
-			const isCardinal     = dot % 15 === 0;
+			const isCardinal     = dot % Math.max(1, ringSegments / 4) === 0;
 			const shapeScale     = isCardinal ? cardinalScale : 1;
 			const dotRadius      = baseDotRadius * 2 * shapeScale;
-			const activeColor    = this.activeColor(dot, elapsed, duration);
+			const activeColor    = this.activeColor(dot, ringSegments, elapsed, duration);
 			context.fillStyle    = progress > 0 ? this.mixCss(inactive, activeColor, progress) : inactive;
 
 			if (this.ringShape === 'darts') {
@@ -273,14 +278,14 @@ class RingTimer extends Vue {
 		context.closePath();
 	}
 
-	activeColor(dot: number, elapsed: number, duration: number): string {
-		return this.activeColorAt(dot / (dotsPerRing - 1), elapsed, duration);
+	activeColor(dot: number, ringSegments: number, elapsed: number, duration: number): string {
+		return this.activeColorAt(dot / Math.max(1, ringSegments - 1), elapsed, duration);
 	}
 
 	activeColorAt(position: number, elapsed: number, duration: number): string {
 		const baseColor        = this.progressColor(position);
 		const overtimeProgress = this.clamp((elapsed - duration) / duration, 0, 1);
-		const dotGreenProgress = this.clamp((overtimeProgress - position) * dotsPerRing, 0, 1);
+		const dotGreenProgress = this.clamp((overtimeProgress - position) * defaultRingSegments, 0, 1);
 
 		return this.toRgb(this.mixRgb(this.parseRgb(baseColor), green, dotGreenProgress));
 	}
@@ -322,12 +327,12 @@ class RingTimer extends Vue {
 
 }
 
-const red                = { r : 255, g : 46, b : 31 };
-const yellow             = { r : 255, g : 214, b : 0 };
-const green              = { r : 41, g : 184, b : 71 };
-const dotsPerRing        = 60;
-const smoothRingSegments = 120;
-const cardinalScale      = 1.36;
+const red                 = { r : 255, g : 46, b : 31 };
+const yellow              = { r : 255, g : 214, b : 0 };
+const green               = { r : 41, g : 184, b : 71 };
+const defaultRingSegments = 60;
+const smoothRingSegments  = 120;
+const cardinalScale       = 1.36;
 
 type TimerColor = typeof red;
 
@@ -337,7 +342,7 @@ export default toNative(RingTimer);
 <style scoped>
 .ring-timer {
 	display: block;
-	width: min(calc(100vw - 16px), calc(50dvh - 16px), 440px);
+	width: min(100%, calc(100vw - 16px), calc(50dvh - 16px), 440px);
 	aspect-ratio: 1;
 }
 </style>

@@ -2,9 +2,9 @@ self.addEventListener('push', event => {
 	event.waitUntil((async () => {
 		const payload = readPushPayload(event);
 
-		await self.registration.showNotification(payload.title || 'Dose-o-clock', {
+		await self.registration.showNotification(payload.title || 'Timer finished', {
 			badge              : '/icons/icon.svg',
-			body               : payload.body || 'Session duration complete.',
+			body               : payload.body || `Timer started at ${payload.startedAtLabel || 'the scheduled time'} has finished.`,
 			data               : { sessionId : payload.sessionId, url : payload.url || '/' },
 			icon               : '/icons/icon.svg',
 			requireInteraction : true,

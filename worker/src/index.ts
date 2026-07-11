@@ -2,8 +2,7 @@ const retryIntervalMs   = 5 * 60 * 1000;
 const retryWindowMs     = 90 * 60 * 1000;
 const cleanupWindowMs   = 90 * 24 * 60 * 60 * 1000;
 const pushTtlSeconds    = 90 * 60;
-const notificationTitle = 'Dose-o-clock';
-const notificationBody  = 'Session duration complete.';
+const notificationTitle = 'Timer finished';
 
 export default {
 	async fetch(request: Request, env: WorkerEnv): Promise<Response> {
@@ -102,6 +101,8 @@ export class NotificationClient {
 			lastNotificationAttemptAt : undefined,
 			retryCount                : 0,
 			retryUntil                : new Date(new Date(body.timer.expiresAt).getTime() + retryWindowMs).toISOString(),
+			startedAt                 : body.timer.startedAt,
+			startedAtLabel            : body.timer.startedAtLabel,
 			sessionId                 : body.timer.sessionId,
 		} satisfies ActiveTimer;
 
@@ -174,13 +175,14 @@ export class NotificationClient {
 		}
 
 		const response = await sendWebPush(record.pushSubscription, this.env, {
-			ackToken  : timer.ackToken,
-			ackUrl    : `${timer.apiOrigin}/clients/${encodeURIComponent(record.clientId)}/timer/${encodeURIComponent(timer.sessionId)}/ack`,
-			body      : notificationBody,
-			clientId  : record.clientId,
-			sessionId : timer.sessionId,
-			title     : notificationTitle,
-			url       : '/',
+			ackToken       : timer.ackToken,
+			ackUrl         : `${timer.apiOrigin}/clients/${encodeURIComponent(record.clientId)}/timer/${encodeURIComponent(timer.sessionId)}/ack`,
+			body           : getNotificationBody(timer),
+			clientId       : record.clientId,
+			sessionId      : timer.sessionId,
+			startedAtLabel : timer.startedAtLabel,
+			title          : notificationTitle,
+			url            : '/',
 		}, timer.sessionId);
 		console.info('web push send', JSON.stringify({ status : response.status, sessionId : timer.sessionId }));
 
@@ -409,9 +411,16 @@ function isSetTimerRequest(value: unknown): value is SetTimerRequest {
 		&& typeof candidate.timer.sessionId === 'string'
 		&& typeof candidate.timer.expiresAt === 'string'
 		&& !Number.isNaN(Date.parse(candidate.timer.expiresAt))
+		&& typeof candidate.timer.startedAt === 'string'
+		&& !Number.isNaN(Date.parse(candidate.timer.startedAt))
+		&& typeof candidate.timer.startedAtLabel === 'string'
 		&& typeof candidate.timer.durationSeconds === 'number'
 		&& candidate.timer.durationSeconds > 0
 	);
+}
+
+function getNotificationBody(timer: ActiveTimer): string {
+	return `Timer started at ${timer.startedAtLabel} has finished.`;
 }
 
 function isPushSubscription(value: unknown): value is StoredPushSubscription {
@@ -546,6 +555,8 @@ interface ActiveTimer {
 	lastNotificationAttemptAt?: string;
 	retryCount: number;
 	retryUntil: string;
+	startedAt: string;
+	startedAtLabel: string;
 	sessionId: string;
 }
 
@@ -564,6 +575,8 @@ interface SetTimerRequest {
 	timer: {
 		durationSeconds: number;
 		expiresAt: string;
+		startedAt: string;
+		startedAtLabel: string;
 		sessionId: string;
 	};
 }
@@ -582,6 +595,7 @@ interface PushPayload {
 	body: string;
 	clientId: string;
 	sessionId: string;
+	startedAtLabel: string;
 	title: string;
 	url: string;
 }

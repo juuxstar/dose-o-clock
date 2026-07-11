@@ -59,6 +59,7 @@ describe('SessionNotification', () => {
 
 	afterEach(async () => {
 		await SessionNotification.clearSchedule();
+		vi.useRealTimers();
 		vi.unstubAllEnvs();
 		vi.restoreAllMocks();
 	});
@@ -96,8 +97,26 @@ describe('SessionNotification', () => {
 			timer : {
 				durationSeconds : 60,
 				expiresAt       : '2026-06-15T12:01:00.000Z',
+				startedAt       : '2026-06-15T12:00:00.000Z',
+				startedAtLabel  : expect.any(String),
 				sessionId       : session.id,
 			},
+		});
+	});
+
+	it('sends a sample expiry notification due immediately', async () => {
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date('2026-06-15T12:00:00.000Z'));
+
+		await SessionNotification.sendSampleExpiryNotification();
+
+		expect(fetchMock).toHaveBeenCalledOnce();
+		const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+		expect(body.timer).toMatchObject({
+			durationSeconds : 60,
+			expiresAt       : '2026-06-15T12:00:00.000Z',
+			startedAt       : '2026-06-15T12:00:00.000Z',
+			sessionId       : expect.any(String),
 		});
 	});
 

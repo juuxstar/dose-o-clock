@@ -1,9 +1,11 @@
 import { TimerSession } from '@/domain/TimerSession';
 
-const lastNotifiedSessionKey  = 'dose-o-clock.last-notified-session-id';
-const notificationsEnabledKey = 'dose-o-clock.notifications-enabled';
-const clientIdKey             = 'dose-o-clock.notification-client-id';
-const clientSecretKey         = 'dose-o-clock.notification-client-secret';
+enum LocalStorageKeys {
+	lastNotifiedSession  = 'dose-o-clock.last-notified-session-id',
+	notificationsEnabled = 'dose-o-clock.notifications-enabled',
+	clientId             = 'dose-o-clock.notification-client-id',
+	clientSecret         = 'dose-o-clock.notification-client-secret',
+}
 
 export class SessionNotification {
 
@@ -57,7 +59,11 @@ export class SessionNotification {
 
 	static clearState(): void {
 		void this.clearSchedule().catch(() => undefined);
-		localStorage.removeItem(lastNotifiedSessionKey);
+		localStorage.removeItem(LocalStorageKeys.lastNotifiedSession);
+	}
+
+	static sendSampleExpiryNotification(): Promise<void> {
+		return this.scheduleRemote(new TimerSession(100, 60, new Date(), 60));
 	}
 
 	private static isSupported(): boolean {
@@ -85,6 +91,8 @@ export class SessionNotification {
 				timer        : {
 					durationSeconds : session.durationSeconds,
 					expiresAt       : session.automaticStopDate().toISOString(),
+					startedAt       : session.startedAt,
+					startedAtLabel  : formatStartedAt(session.startedAt),
 					sessionId       : session.id,
 				},
 			}),
@@ -137,15 +145,15 @@ export class SessionNotification {
 	}
 
 	private static wasNotified(sessionId: string): boolean {
-		return localStorage.getItem(lastNotifiedSessionKey) === sessionId;
+		return localStorage.getItem(LocalStorageKeys.lastNotifiedSession) === sessionId;
 	}
 
 	private static isEnabled(): boolean {
-		return localStorage.getItem(notificationsEnabledKey) !== 'false';
+		return localStorage.getItem(LocalStorageKeys.notificationsEnabled) !== 'false';
 	}
 
 	private static setEnabled(enabled: boolean): void {
-		localStorage.setItem(notificationsEnabledKey, String(enabled));
+		localStorage.setItem(LocalStorageKeys.notificationsEnabled, String(enabled));
 	}
 
 	private static getClientIdentity(): SessionNotificationClientIdentity {
@@ -156,15 +164,15 @@ export class SessionNotification {
 
 		const identity = { clientId : createToken(), clientSecret : createToken() };
 
-		localStorage.setItem(clientIdKey, identity.clientId);
-		localStorage.setItem(clientSecretKey, identity.clientSecret);
+		localStorage.setItem(LocalStorageKeys.clientId, identity.clientId);
+		localStorage.setItem(LocalStorageKeys.clientSecret, identity.clientSecret);
 
 		return identity;
 	}
 
 	private static getExistingClientIdentity(): SessionNotificationClientIdentity | null {
-		const clientId     = localStorage.getItem(clientIdKey);
-		const clientSecret = localStorage.getItem(clientSecretKey);
+		const clientId     = localStorage.getItem(LocalStorageKeys.clientId);
+		const clientSecret = localStorage.getItem(LocalStorageKeys.clientSecret);
 
 		if (!clientId || !clientSecret) {
 			return null;
@@ -213,6 +221,10 @@ function createToken(): string {
 	globalThis.crypto?.getRandomValues(bytes);
 
 	return [ ...bytes ].map(value => value.toString(16).padStart(2, '0')).join('');
+}
+
+function formatStartedAt(startedAt: string): string {
+	return new Intl.DateTimeFormat(undefined, { hour : 'numeric', minute : '2-digit' }).format(new Date(startedAt));
 }
 
 interface SessionNotificationClientIdentity {

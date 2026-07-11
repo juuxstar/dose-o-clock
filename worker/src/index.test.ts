@@ -30,6 +30,7 @@ describe('NotificationClient', () => {
 		expect(storage.values.get('pushSubscription')).toEqual(pushSubscription);
 		expect(storage.values.get('lastSeenAt')).toEqual(expect.any(String));
 		expect(storage.alarm).toBe(Date.parse(activeTimer.expiresAt));
+		expect(activeTimer.startedAtLabel).toBe('12:00 PM');
 	});
 
 	it('replaces the old timer, ack token, retry state, and alarm', async () => {
@@ -117,7 +118,16 @@ async function setTimer(
 	timer: { expiresAt: string; sessionId: string }
 ): Promise<Response> {
 	return client.fetch(new Request('https://notifications.example.test/clients/client-1/timer', {
-		body    : JSON.stringify({ clientSecret : 'secret-1', subscription, timer : { durationSeconds : 60, ...timer } }),
+		body : JSON.stringify({
+			clientSecret : 'secret-1',
+			subscription,
+			timer        : {
+				durationSeconds : 60,
+				startedAt       : '2026-06-15T12:00:00.000Z',
+				startedAtLabel  : '12:00 PM',
+				...timer,
+			},
+		}),
 		headers : { 'Content-Type' : 'application/json' },
 		method  : 'POST',
 	}));
@@ -218,5 +228,6 @@ interface TestActiveTimer {
 	ackToken: string;
 	expiresAt: string;
 	retryCount: number;
+	startedAtLabel: string;
 	sessionId: string;
 }

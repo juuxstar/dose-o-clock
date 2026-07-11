@@ -24,7 +24,7 @@
 		</button>
 
 		<button
-			v-else
+			v-else-if="!currentAndLatestMatch"
 			class="secondary-button u-flex u-items-center u-justify-center u-gap-8 u-width-100"
 			type="button"
 			@click="refreshVersionUpdateStatus"
@@ -35,20 +35,12 @@
 
 		<div class="build-details u-grid u-gap-10">
 			<div class="build-detail u-flex u-justify-between u-gap-12">
-				<span>Current Version</span>
-				<strong>{{ currentVersion }}</strong>
+				<span>Current</span>
+				<strong>{{ currentVersionDetails }}</strong>
 			</div>
 			<div class="build-detail u-flex u-justify-between u-gap-12">
-				<span>Current Build</span>
-				<strong>{{ buildStamp }}</strong>
-			</div>
-			<div class="build-detail u-flex u-justify-between u-gap-12">
-				<span>Latest Version</span>
-				<strong>{{ latestVersionLabel }}</strong>
-			</div>
-			<div class="build-detail u-flex u-justify-between u-gap-12">
-				<span>Latest Build</span>
-				<strong>{{ latestBuildStamp }}</strong>
+				<span>Latest</span>
+				<strong>{{ latestVersionDetails }}</strong>
 			</div>
 			<div v-if="isDevelopmentMode" class="build-detail u-flex u-justify-between u-gap-12">
 				<span>Environment</span>
@@ -90,6 +82,19 @@ class VersionUpdatePage extends Vue {
 		return import.meta.env.VITE_APP_VERSION;
 	}
 
+	get currentVersionDetails(): string {
+		return `${this.currentVersion} - ${this.buildStamp}`;
+	}
+
+	get currentAndLatestMatch(): boolean {
+		if (!this.latestVersion || !this.latestBuildTimestamp) {
+			return false;
+		}
+
+		return this.currentVersion === this.latestVersion
+			&& new Date(import.meta.env.VITE_BUILD_TIMESTAMP).getTime() === new Date(this.latestBuildTimestamp).getTime();
+	}
+
 	get latestBuildStamp(): string {
 		if (!this.latestBuildTimestamp) {
 			return 'Unknown';
@@ -105,6 +110,10 @@ class VersionUpdatePage extends Vue {
 
 	get latestVersionLabel(): string {
 		return this.latestVersion || 'Unknown';
+	}
+
+	get latestVersionDetails(): string {
+		return `${this.latestVersionLabel} - ${this.latestBuildStamp}`;
 	}
 
 	get statusLabel(): string {
