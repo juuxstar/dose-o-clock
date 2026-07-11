@@ -1,0 +1,30 @@
+services:
+  dose-o-clock:
+    image: node:24-alpine
+    container_name: dose-o-clock
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev:http"
+    volumes:
+      - .:/app
+      - dose_o_clock_node_modules:/app/node_modules
+    environment:
+      NODE_ENV: development
+      VITE_DEV_ORIGIN: ${VITE_DEV_ORIGIN:-https://dose-o-clock.dev.localhost:8888}
+    expose:
+      - "5175"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dose-o-clock.rule=Host(`dose-o-clock.localhost`) || Host(`dose-o-clock.dev.localhost`)"
+      - "traefik.http.routers.dose-o-clock.priority=100"
+      - "traefik.http.routers.dose-o-clock.entrypoints=websecure"
+      - "traefik.http.routers.dose-o-clock.tls=true"
+      - "traefik.http.services.dose-o-clock.loadbalancer.server.port=5175"
+    networks:
+      - web-proxy
+
+volumes:
+  dose_o_clock_node_modules:
+
+networks:
+  web-proxy:
+    external: true

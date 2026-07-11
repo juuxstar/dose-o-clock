@@ -56,6 +56,27 @@ If `tomas.houseoftovig.com.pem` exists locally, Vite uses it as both the HTTPS k
 
 If the PEM file is missing, Vite starts without local HTTPS. This keeps CI and hosting builds, such as Cloudflare Pages, from failing when the local-only certificate is not available.
 
+## Run with the Local Proxy
+
+For local development behind Traefik, the shared proxy must already be running and must provide the external Docker network named `web-proxy`.
+
+```bash
+npm run dev:docker
+```
+
+This starts the Vite dev server inside a Node container on the shared proxy network. Open:
+
+```text
+https://dose-o-clock.localhost:8888
+```
+
+The same container also responds to `https://dose-o-clock.dev.localhost:8888`. Use these commands to follow logs or stop the container:
+
+```bash
+npm run logs:dev:docker
+npm run stop:dev:docker
+```
+
 ## Build
 
 ```bash
@@ -126,6 +147,7 @@ The app is configured as a PWA through `vite-plugin-pwa`.
 
 ```bash
 npm run dev      # Start the HTTPS Vite dev server
+npm run dev:docker # Start the HTTP Vite dev server behind Traefik
 npm run build    # Type-check and build for production
 npm run preview  # Serve the production build locally
 npm run lint     # Run ESLint

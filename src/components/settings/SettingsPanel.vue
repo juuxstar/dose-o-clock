@@ -225,7 +225,7 @@ import { useTimerStore }     from '@/store/useTimerStore';
 		VersionUpdatePage,
 		Wrench,
 	},
-	emits : [ 'close', 'interact' ],
+	emits : [ 'close', 'interact', 'setup-mode-change' ],
 })
 class SettingsPanel extends Vue {
 
@@ -350,11 +350,21 @@ class SettingsPanel extends Vue {
 		}
 	}
 
+	@Watch('setupMode')
+	onSetupModeChanged(setupMode: boolean): void {
+		this.setupModeChange(setupMode);
+	}
+
 	@Emit('close')
 	close(): void {}
 
 	@Emit('interact')
 	interact(): void {}
+
+	@Emit('setup-mode-change')
+	setupModeChange(setupMode: boolean): boolean {
+		return setupMode;
+	}
 
 	async refreshVersionUpdateStatus(): Promise<void> {
 		const updateCheck        = await checkVersionUpdate();

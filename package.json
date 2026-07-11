@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "vite",
     "dev:http": "vite --mode codex",
+    "dev:docker": "docker compose -f docker-compose.dev.yml up",
+    "stop:dev:docker": "docker compose -f docker-compose.dev.yml down",
+    "logs:dev:docker": "docker compose -f docker-compose.dev.yml logs -f dose-o-clock",
     "prebuild": "npm version minor --no-git-tag-version",
     "build": "vue-tsc --noEmit && tsc -p tsconfig.worker.json --noEmit && vite build",
     "preview": "vite preview",

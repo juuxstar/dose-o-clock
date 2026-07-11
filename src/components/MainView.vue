@@ -43,6 +43,7 @@
 			:open="openPanelName === 'settings'"
 			@close="closePanel"
 			@interact="resetAutoClose"
+			@setup-mode-change="setSettingsSetupMode"
 		/>
 		<PanelShell :open="onboardingOpen" @close="completeOnboarding" @interact="resetAutoClose">
 			<div class="panel-content">
@@ -125,7 +126,7 @@ class MainView extends Vue {
 	resetAutoClose(): void {
 		window.clearTimeout(this.autoCloseTimeout);
 
-		if (!isDevelopmentMode && (this.openPanelName || this.onboardingOpen)) {
+		if (!isDevelopmentMode && (this.openPanelName || this.onboardingOpen) && !this.setupGuideOpen) {
 			this.autoCloseTimeout = window.setTimeout(() => this.closePanel(), 10_000);
 		}
 	}
@@ -139,11 +140,20 @@ class MainView extends Vue {
 		this.resetAutoClose();
 	}
 
+	setSettingsSetupMode(setupMode: boolean): void {
+		this.settingsSetupMode = setupMode;
+		this.resetAutoClose();
+	}
+
 	completeOnboarding(): void {
 		localStorage.setItem(onboardingCompleteKey, 'true');
 		this.onboardingOpen    = false;
 		this.settingsSetupMode = false;
 		window.clearTimeout(this.autoCloseTimeout);
+	}
+
+	get setupGuideOpen(): boolean {
+		return this.onboardingOpen || this.settingsSetupMode;
 	}
 
 }

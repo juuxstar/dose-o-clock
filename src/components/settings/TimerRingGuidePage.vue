@@ -77,9 +77,7 @@ export default toNative(TimerRingGuidePage);
 .timer-ring-example {
 	grid-template-columns: 82px 1fr;
 	min-height: 104px;
-	border-radius: 8px;
-	background: var(--tertiary-grouped-bg);
-	padding: 12px;
+	padding: 8px 4px;
 }
 
 .timer-ring-example__preview {

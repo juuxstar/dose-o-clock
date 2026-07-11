@@ -8,6 +8,7 @@ import { VitePWA }                   from 'vite-plugin-pwa';
 const localTlsCertificatePath = fileURLToPath(new URL('./tomas.houseoftovig.com.pem', import.meta.url));
 const buildTimestamp          = new Date().toISOString();
 const appVersion              = JSON.parse(readFileSync(fileURLToPath(new URL('./package.json', import.meta.url)), 'utf8')).version as string;
+const devOrigin               = process.env.VITE_DEV_ORIGIN;
 
 export default defineConfig(({ command, mode }) => {
 	const useLocalHttps       = command === 'serve' && mode === 'development';
@@ -77,9 +78,11 @@ export default defineConfig(({ command, mode }) => {
 			},
 		},
 		server : {
-			host  : '0.0.0.0',
-			port  : 5175,
-			https : localHttpsConfig,
+			host       : '0.0.0.0',
+			port       : 5175,
+			strictPort : true,
+			https      : localHttpsConfig,
+			...(devOrigin ? { origin : devOrigin } : {}),
 		},
 		preview : {
 			host : '0.0.0.0',
