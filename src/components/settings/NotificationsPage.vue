@@ -103,7 +103,7 @@ export default toNative(NotificationsPage);
 
 .capability-status {
 	grid-template-columns: 32px 1fr;
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	background: var(--tertiary-grouped-bg);
 	padding: 12px;
 }

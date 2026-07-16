@@ -36,16 +36,39 @@
 		<div class="build-details u-grid u-gap-10">
 			<div class="build-detail u-flex u-justify-between u-gap-12">
 				<span>Current</span>
-				<strong>{{ currentVersionDetails }}</strong>
+				<strong class="u-text-right">{{ currentVersionDetails }}</strong>
 			</div>
 			<div class="build-detail u-flex u-justify-between u-gap-12">
 				<span>Latest</span>
-				<strong>{{ latestVersionDetails }}</strong>
+				<strong class="u-text-right">{{ latestVersionDetails }}</strong>
 			</div>
 			<div v-if="isDevelopmentMode" class="build-detail u-flex u-justify-between u-gap-12">
 				<span>Environment</span>
-				<strong>{{ appEnvironment }}</strong>
+				<strong class="u-text-right">{{ appEnvironment }}</strong>
 			</div>
+		</div>
+
+		<div class="release-history u-grid u-gap-10">
+			<strong>What changed</strong>
+			<div v-if="releaseHistory.length" class="release-history__list u-grid u-gap-12">
+				<section v-for="release in releaseHistory" :key="release.version" class="release-entry u-grid u-gap-4">
+					<header class="release-entry__header u-flex u-items-baseline u-justify-between u-gap-12">
+						<strong>{{ release.version }}</strong>
+						<span v-if="formatPublishedAt(release.publishedAt)">{{ formatPublishedAt(release.publishedAt) }}</span>
+					</header>
+					<ul v-if="release.changes?.length" class="release-entry__changes u-grid u-gap-4 u-margin-0">
+						<li v-for="change in release.changes" :key="change">
+							{{ change }}
+						</li>
+					</ul>
+					<p v-else class="release-entry__empty u-margin-0">
+						No summary recorded.
+					</p>
+				</section>
+			</div>
+			<p v-else class="release-entry__empty u-margin-0">
+				No release summaries recorded yet.
+			</p>
 		</div>
 	</div>
 </template>
@@ -54,7 +77,8 @@
 import { CheckCircle2, Download, RefreshCw } from '@lucide/vue';
 import { Component, Prop, toNative, Vue }    from 'vue-facing-decorator';
 
-import { appEnvironment, isDevelopmentMode } from '@/domain/AppEnvironment';
+import { appEnvironment, isDevelopmentMode }   from '@/domain/AppEnvironment';
+import { type AppRelease, loadReleaseHistory } from '@/domain/AppVersion';
 import { checkVersionUpdate, refreshPwa, type VersionUpdateCheck, type VersionUpdateStatus } from '@/pwa';
 
 /**
@@ -72,6 +96,7 @@ class VersionUpdatePage extends Vue {
 	latestVersion        = '';
 	appEnvironment       = appEnvironment;
 	isDevelopmentMode    = isDevelopmentMode;
+	releaseHistory: AppRelease[] = [];
 
 	get buildStamp(): string {
 		return new Intl.DateTimeFormat(undefined, { dateStyle : 'medium', timeStyle : 'short' })
@@ -138,6 +163,7 @@ class VersionUpdatePage extends Vue {
 
 	mounted(): void {
 		void this.refreshVersionUpdateStatus();
+		void this.refreshReleaseHistory();
 	}
 
 	async installVersionUpdate(): Promise<void> {
@@ -167,6 +193,19 @@ class VersionUpdatePage extends Vue {
 		this.latestVersion        = updateCheck.latestVersion ?? '';
 	}
 
+	async refreshReleaseHistory(): Promise<void> {
+		this.releaseHistory = await loadReleaseHistory();
+	}
+
+	formatPublishedAt(publishedAt: string | undefined): string {
+		if (!publishedAt) {
+			return '';
+		}
+
+		return new Intl.DateTimeFormat(undefined, { dateStyle : 'medium' })
+			.format(new Date(publishedAt));
+	}
+
 }
 
 export default toNative(VersionUpdatePage);
@@ -180,7 +219,7 @@ export default toNative(VersionUpdatePage);
 
 .version-status {
 	grid-template-columns: 32px 1fr;
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	background: var(--tertiary-grouped-bg);
 	padding: 12px;
 }
@@ -207,15 +246,47 @@ export default toNative(VersionUpdatePage);
 
 .secondary-button {
 	min-height: 52px;
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	background: var(--tertiary-grouped-bg);
 	font-weight: 800;
 }
 
 .build-details {
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	background: var(--tertiary-grouped-bg);
 	padding: 12px;
+}
+
+.release-history {
+	border-radius: var(--radius-control);
+	background: var(--tertiary-grouped-bg);
+	padding: 12px;
+}
+
+.release-history > strong {
+	display: block;
+}
+
+.release-entry {
+	border-top: 1px solid var(--separator);
+	padding-top: 10px;
+}
+
+.release-entry__header {
+	min-width: 0;
+}
+
+.release-entry__header span,
+.release-entry__empty {
+	color: var(--muted-text);
+	font-size: var(--font-size-sm);
+	line-height: 1.3;
+}
+
+.release-entry__changes {
+	padding-left: 18px;
+	font-size: var(--font-size-sm);
+	line-height: 1.35;
 }
 
 .build-detail {
@@ -224,7 +295,6 @@ export default toNative(VersionUpdatePage);
 
 .build-detail strong {
 	min-width: 0;
-	text-align: right;
 	overflow-wrap: anywhere;
 }
 </style>

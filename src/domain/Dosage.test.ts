@@ -16,8 +16,13 @@ describe('dosage', () => {
 		expect(Dosage.generateMaxValues(50)[0]).toBe(100);
 	});
 
+	it('allows maximum dosage values up to 10.0 ml', () => {
+		const values = Dosage.generateMaxValues(50);
+		expect(values[values.length - 1]).toBe(1000);
+	});
+
 	it('snaps max and default dosage to the closest valid values', () => {
-		expect(Dosage.snapMax(110, 25)).toBe(100);
+		expect(Dosage.snapMax(1200, 25)).toBe(1000);
 		expect(Dosage.snapDefault(110, 500, 25)).toBe(100);
 	});
 

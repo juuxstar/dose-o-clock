@@ -60,4 +60,15 @@ export default [
 			'quote-props'                          : 'off',
 		},
 	},
+	{
+		files           : [ 'scripts/**/*.mjs' ],
+		languageOptions : {
+			parserOptions : {
+				project : false,
+			},
+		},
+		rules : {
+			'@typescript-eslint/no-floating-promises' : 'off',
+		},
+	},
 ];

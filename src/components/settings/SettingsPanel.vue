@@ -614,7 +614,7 @@ export default toNative(SettingsPanel);
 .icon-only {
 	width: 44px;
 	height: 38px;
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	background: transparent;
 }
 
@@ -631,7 +631,7 @@ export default toNative(SettingsPanel);
 
 .wizard-next-button {
 	min-height: 38px;
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	background: transparent;
 	color: var(--blue);
 	font-weight: 800;
@@ -640,7 +640,7 @@ export default toNative(SettingsPanel);
 .settings-row {
 	min-height: 54px;
 	grid-template-columns: 28px 1fr auto 20px;
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	background: var(--tertiary-grouped-bg);
 	padding: 0 14px;
 }

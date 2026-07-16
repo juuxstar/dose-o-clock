@@ -1,7 +1,9 @@
 <template>
 	<div class="getting-started-guide u-grid u-gap-12">
 		<header class="guide-intro u-grid u-gap-8 u-text-center">
-			<h3>{{ heading }}</h3>
+			<h3 class="u-margin-0">
+				{{ heading }}
+			</h3>
 			<p class="u-margin-0">
 				{{ intro }}
 			</p>
@@ -52,7 +54,6 @@ export default toNative(GettingStartedGuide);
 }
 
 .guide-intro h3 {
-	margin: 0;
 	font-size: var(--font-size-title);
 }
 
@@ -64,7 +65,7 @@ export default toNative(GettingStartedGuide);
 
 .secondary-button {
 	min-height: 48px;
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	background: var(--tertiary-grouped-bg);
 	font-weight: 800;
 }

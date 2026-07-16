@@ -1,5 +1,25 @@
 <template>
 	<main class="app-shell u-flex u-flex-column u-items-center" :class="timerPositionClass">
+		<div v-if="versionNoticeOpen" class="version-notice u-flex u-items-start u-justify-between u-gap-12" role="status">
+			<div class="version-notice__copy u-grid u-gap-2">
+				<strong>Updated to {{ currentVersion }}</strong>
+				<span>{{ versionNoticeSummary }}</span>
+				<ul v-if="releaseChanges.length" class="version-notice__changes u-grid u-gap-4">
+					<li v-for="change in releaseChanges" :key="change">
+						{{ change }}
+					</li>
+				</ul>
+			</div>
+			<button
+				class="version-notice__close u-grid u-place-center"
+				type="button"
+				aria-label="Dismiss update notice"
+				@click="dismissVersionNotice"
+			>
+				<X :size="18" />
+			</button>
+		</div>
+
 		<section class="timer-stage u-grid u-place-center u-width-100">
 			<RingTimer
 				:elapsed-seconds="store.visualElapsedSeconds.value"
@@ -57,7 +77,7 @@
 </template>
 
 <script lang="ts">
-import { List, Plus, Settings }     from '@lucide/vue';
+import { List, Plus, Settings, X }  from '@lucide/vue';
 import { markRaw }                  from 'vue';
 import { Component, toNative, Vue } from 'vue-facing-decorator';
 
@@ -68,6 +88,7 @@ import GettingStartedGuide   from '@/components/widgets/GettingStartedGuide.vue'
 import PanelShell            from '@/components/widgets/PanelShell.vue';
 import RingTimer             from '@/components/widgets/RingTimer.vue';
 import { isDevelopmentMode } from '@/domain/AppEnvironment';
+import { currentAppVersion, getVersionNotice, loadReleaseChanges, rememberCurrentVersion } from '@/domain/AppVersion';
 import { useTimerStore }     from '@/store/useTimerStore';
 
 const onboardingCompleteKey = 'dose-o-clock.onboarding-complete';
@@ -76,17 +97,30 @@ const onboardingCompleteKey = 'dose-o-clock.onboarding-complete';
  * Coordinates the main timer view, persistent ticking, and temporary panels.
  */
 @Component({
-	components : { GettingStartedGuide, HistoryPanel, List, NewSessionPanel, PanelShell, Plus, RingTimer, Settings, SettingsPanel },
+	components : { GettingStartedGuide, HistoryPanel, List, NewSessionPanel, PanelShell, Plus, RingTimer, Settings, SettingsPanel, X },
 })
 class MainView extends Vue {
 
-	store           = markRaw(useTimerStore());
+	store              = markRaw(useTimerStore());
 	openPanelName: PanelName | null = null;
 	settingsInitialPage: SettingsInitialPage | null = null;
-	settingsSetupMode = false;
+	settingsSetupMode  = false;
 	onboardingOpen     = false;
+	versionNoticeOpen  = false;
+	previousVersion    = '';
+	releaseChanges: string[] = [];
 	tickInterval: number | undefined;
 	autoCloseTimeout: number | undefined;
+
+	get currentVersion(): string {
+		return currentAppVersion;
+	}
+
+	get versionNoticeSummary(): string {
+		return this.releaseChanges.length
+			? 'Here is what changed since your last version.'
+			: 'Things may look or behave a little differently.';
+	}
 
 	get timerPositionClass(): string {
 		return `timer-position--${this.store.timerPosition.value}`;
@@ -94,8 +128,13 @@ class MainView extends Vue {
 
 	mounted(): void {
 		this.store.tick();
-		this.tickInterval   = window.setInterval(() => this.store.tick(), 1000);
-		this.onboardingOpen = localStorage.getItem(onboardingCompleteKey) !== 'true';
+		this.tickInterval      = window.setInterval(() => this.store.tick(), 1000);
+		this.onboardingOpen    = localStorage.getItem(onboardingCompleteKey) !== 'true';
+		this.versionNoticeOpen = this.shouldShowVersionNotice();
+
+		if (this.versionNoticeOpen) {
+			void this.loadReleaseNotes();
+		}
 	}
 
 	beforeUnmount(): void {
@@ -152,8 +191,23 @@ class MainView extends Vue {
 		window.clearTimeout(this.autoCloseTimeout);
 	}
 
+	dismissVersionNotice(): void {
+		rememberCurrentVersion();
+		this.versionNoticeOpen = false;
+	}
+
 	get setupGuideOpen(): boolean {
 		return this.onboardingOpen || this.settingsSetupMode;
+	}
+
+	shouldShowVersionNotice(): boolean {
+		const versionNotice  = getVersionNotice();
+		this.previousVersion = versionNotice.previousVersion;
+		return versionNotice.show;
+	}
+
+	async loadReleaseNotes(): Promise<void> {
+		this.releaseChanges = await loadReleaseChanges(this.previousVersion, this.currentVersion);
 	}
 
 }
@@ -176,6 +230,45 @@ export default toNative(MainView);
 
 .timer-stage {
 	min-height: 50dvh;
+}
+
+.version-notice {
+	position: fixed;
+	top: calc(env(safe-area-inset-top) + 12px);
+	right: 16px;
+	left: 16px;
+	z-index: 20;
+	border-radius: var(--radius-control);
+	background: var(--secondary-grouped-bg);
+	box-shadow: 0 10px 28px var(--panel-shadow);
+	padding: 12px;
+}
+
+.version-notice__copy strong {
+	font-size: var(--font-size-title);
+}
+
+.version-notice__copy span {
+	color: var(--muted-text);
+	font-size: var(--font-size-sm);
+	line-height: 1.3;
+}
+
+.version-notice__changes {
+	margin: 6px 0 0;
+	padding-left: 18px;
+	color: var(--text);
+	font-size: var(--font-size-sm);
+	line-height: 1.35;
+}
+
+.version-notice__close {
+	flex: 0 0 auto;
+	width: 34px;
+	height: 34px;
+	border-radius: 999px;
+	background: var(--tertiary-grouped-bg);
+	color: var(--muted-text);
 }
 
 .timer-position--center .timer-stage {

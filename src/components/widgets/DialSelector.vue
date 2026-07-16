@@ -327,7 +327,7 @@ export default toNative(DialSelector);
 	position: relative;
 	height: 72px;
 	overflow: hidden;
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	background: var(--tertiary-grouped-bg);
 	touch-action: none;
 	user-select: none;

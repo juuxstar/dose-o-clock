@@ -16,6 +16,7 @@
 	--blue: #007aff;
 	--gray: #8e8e93;
 	--panel-shadow: rgba(0, 0, 0, 0.18);
+	--radius-control: 8px;
 	--font-size-xs: 12px;
 	--font-size-sm: 13px;
 	--font-size-body: 14px;
@@ -82,6 +83,14 @@ button:disabled {
 	align-items: center;
 }
 
+.u-items-start {
+	align-items: flex-start;
+}
+
+.u-items-baseline {
+	align-items: baseline;
+}
+
 .u-items-end {
 	align-items: flex-end;
 }
@@ -104,6 +113,10 @@ button:disabled {
 
 .u-justify-items-center {
 	justify-items: center;
+}
+
+.u-gap-2 {
+	gap: 2px;
 }
 
 .u-gap-4 {
@@ -179,7 +192,7 @@ button:disabled {
 
 .primary-button {
 	min-height: 52px;
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	color: #ffffff;
 	font-weight: 800;
 }

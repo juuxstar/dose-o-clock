@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { TimerSession } from '@/domain/TimerSession';
-import { loadState, saveActiveSession, saveHistory, storageKeys } from '@/store/storage';
+import { loadState, loadString, saveActiveSession, saveHistory, saveString, storageKeys, TimerRingShape } from '@/store/storage';
 
 describe('storage', () => {
 	beforeEach(() => {
@@ -13,14 +13,14 @@ describe('storage', () => {
 		localStorage.setItem(storageKeys.maxUnitHundredths, '110');
 		localStorage.setItem(storageKeys.defaultUnitHundredths, '124');
 		localStorage.setItem(storageKeys.timerPosition, 'center');
-		localStorage.setItem(storageKeys.timerRingShape, 'bars');
+		localStorage.setItem(storageKeys.timerRingShape, TimerRingShape.Bars);
 
 		expect(loadState()).toMatchObject({
 			dosageIncrementHundredths : 25,
 			maxUnitHundredths         : 100,
 			defaultUnitHundredths     : 100,
 			timerPosition             : 'center',
-			timerRingShape            : 'bars',
+			timerRingShape            : TimerRingShape.Bars,
 		});
 	});
 
@@ -29,18 +29,18 @@ describe('storage', () => {
 			defaultUnitHundredths : 200,
 			maxUnitHundredths     : 500,
 			timerPosition         : 'top',
-			timerRingShape        : 'dots',
+			timerRingShape        : TimerRingShape.Dots,
 		});
 	});
 
 	it('falls back to dots for unknown timer ring shapes', () => {
 		localStorage.setItem(storageKeys.timerRingShape, 'squares');
 
-		expect(loadState()).toMatchObject({ timerRingShape : 'dots' });
+		expect(loadState()).toMatchObject({ timerRingShape : TimerRingShape.Dots });
 	});
 
 	it('loads newer timer ring shapes', () => {
-		for (const shape of [ 'capsules', 'ticks', 'petals', 'minimal' ]) {
+		for (const shape of Object.values(TimerRingShape)) {
 			localStorage.setItem(storageKeys.timerRingShape, shape);
 
 			expect(loadState()).toMatchObject({ timerRingShape : shape });
@@ -58,6 +58,15 @@ describe('storage', () => {
 		expect(loaded.activeSession).toBeInstanceOf(TimerSession);
 		expect(loaded.history[0]).toBeInstanceOf(TimerSession);
 		expect(loaded.history).toHaveLength(1);
+	});
+
+	it('persists string values by shared storage key', () => {
+		expect(loadString('lastSeenVersion')).toBe('');
+
+		saveString('lastSeenVersion', '1.4.0');
+
+		expect(loadString('lastSeenVersion')).toBe('1.4.0');
+		expect(localStorage.getItem(storageKeys.lastSeenVersion)).toBe('1.4.0');
 	});
 
 	it('clears active session and history on load when active session is 24 hours old', () => {

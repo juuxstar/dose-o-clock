@@ -6,7 +6,7 @@ export class Dosage {
 
 	static readonly minHundredths          = 1;
 	static readonly minMaxHundredths       = 100;
-	static readonly absoluteMaxHundredths  = 500;
+	static readonly absoluteMaxHundredths  = 1000;
 	static readonly defaultHundredths      = 200;
 	static readonly defaultMaxHundredths   = 500;
 	static readonly defaultIncrement       = 10;

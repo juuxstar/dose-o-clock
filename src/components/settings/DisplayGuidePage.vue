@@ -8,10 +8,14 @@
 		</section>
 
 		<section class="ring-style-grid u-grid u-gap-10">
-			<div
+			<button
 				v-for="style in ringStyles"
 				:key="style.label"
 				class="ring-style-card u-grid u-gap-8"
+				:class="{ 'ring-style-card--selected' : style.shape === selectedRingShape }"
+				type="button"
+				:aria-pressed="style.shape === selectedRingShape"
+				@click="selectRingStyle(style.shape)"
 			>
 				<div class="ring-style-card__preview u-grid u-place-center">
 					<RingTimer
@@ -22,16 +26,18 @@
 					/>
 				</div>
 				<strong class="u-text-center">{{ style.label }}</strong>
-			</div>
+			</button>
 		</section>
 	</div>
 </template>
 
 <script lang="ts">
+import { markRaw }                  from 'vue';
 import { Component, toNative, Vue } from 'vue-facing-decorator';
 
-import RingTimer               from '@/components/widgets/RingTimer.vue';
-import type { TimerRingShape } from '@/store/storage';
+import RingTimer          from '@/components/widgets/RingTimer.vue';
+import { TimerRingShape } from '@/store/storage';
+import { useTimerStore }  from '@/store/useTimerStore';
 
 /**
  * Introduces display settings and previews a few timer ring styles.
@@ -39,10 +45,19 @@ import type { TimerRingShape } from '@/store/storage';
 @Component({ components : { RingTimer } })
 class DisplayGuidePage extends Vue {
 
+	store                  = markRaw(useTimerStore());
 	previewDurationSeconds = previewDurationSeconds;
 	previewElapsedSeconds  = previewElapsedSeconds;
 	previewRingSegments    = previewRingSegments;
 	ringStyles             = displayRingStyles;
+
+	get selectedRingShape(): TimerRingShape {
+		return this.store.timerRingShape.value;
+	}
+
+	selectRingStyle(shape: TimerRingShape): void {
+		this.store.setTimerRingShape(shape);
+	}
 
 }
 
@@ -51,9 +66,9 @@ const previewElapsedSeconds  = 42;
 const previewRingSegments    = 24;
 
 const displayRingStyles: DisplayRingStyle[] = [
-	{ label : 'Dots', shape : 'dots' },
-	{ label : 'Capsules', shape : 'capsules' },
-	{ label : 'Minimal', shape : 'minimal' },
+	{ label : 'Dots', shape : TimerRingShape.Dots },
+	{ label : 'Capsules', shape : TimerRingShape.Capsules },
+	{ label : 'Minimal', shape : TimerRingShape.Minimal },
 ];
 
 interface DisplayRingStyle {
@@ -85,9 +100,13 @@ export default toNative(DisplayGuidePage);
 
 .ring-style-card {
 	justify-items: center;
-	border-radius: 8px;
+	border: 1px solid transparent;
+	border-radius: var(--radius-control);
 	background: var(--tertiary-grouped-bg);
+	color: var(--text);
 	padding: 10px 8px;
+	font: inherit;
+	cursor: pointer;
 }
 
 .ring-style-card__preview {
@@ -97,5 +116,10 @@ export default toNative(DisplayGuidePage);
 
 .ring-style-card strong {
 	font-size: var(--font-size-sm);
+}
+
+.ring-style-card--selected {
+	border-color: var(--green);
+	background: color-mix(in srgb, var(--tertiary-grouped-bg), var(--green) 14%);
 }
 </style>

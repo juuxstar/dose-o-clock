@@ -6,10 +6,12 @@
   "scripts": {
     "dev": "vite",
     "dev:http": "vite --mode codex",
-    "dev:docker": "docker compose -f docker-compose.dev.yml up",
+    "dev:docker": "HOST_LAN_IP=$(ifconfig $(route -n get default | awk '/interface:/{print $2; exit}') | awk '/inet /{print $2; exit}') docker compose -f docker-compose.dev.yml up",
     "stop:dev:docker": "docker compose -f docker-compose.dev.yml down",
     "logs:dev:docker": "docker compose -f docker-compose.dev.yml logs -f dose-o-clock",
-    "prebuild": "npm version minor --no-git-tag-version",
+    "version:bump": "npm version patch --no-git-tag-version",
+    "release-notes:prepare": "node scripts/prepare-release-notes.mjs",
+    "release-notes:write": "node scripts/write-release-notes.mjs",
     "build": "vue-tsc --noEmit && tsc -p tsconfig.worker.json --noEmit && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -19,6 +21,7 @@
   "dependencies": {
     "@lucide/vue": "^1.18.0",
     "@vitejs/plugin-vue": "^5.2.4",
+    "qrcode-generator": "^2.0.4",
     "vite": "^6.0.1",
     "vite-plugin-pwa": "^0.21.1",
     "vue": "^3.5.13",

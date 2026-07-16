@@ -166,7 +166,7 @@ export default toNative(InstallPage);
 
 .capability-status {
 	grid-template-columns: 32px 1fr;
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	background: var(--tertiary-grouped-bg);
 	padding: 12px;
 }
@@ -201,7 +201,7 @@ export default toNative(InstallPage);
 }
 
 .manual-install-card {
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	background: var(--tertiary-grouped-bg);
 	padding: 14px;
 	color: var(--text);
@@ -229,7 +229,7 @@ export default toNative(InstallPage);
 	height: 30px;
 	margin: 0 4px;
 	border: 1px solid var(--separator);
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	background: var(--secondary-grouped-bg);
 	color: var(--blue);
 	vertical-align: middle;
@@ -240,7 +240,7 @@ export default toNative(InstallPage);
 	min-height: 30px;
 	align-items: center;
 	border: 1px solid var(--separator);
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	background: var(--secondary-grouped-bg);
 	padding: 3px 8px;
 	font-weight: 700;

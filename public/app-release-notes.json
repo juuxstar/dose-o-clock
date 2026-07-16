@@ -1,0 +1,52 @@
+{
+  "latest": {
+    "version": "1.4.1",
+    "publishedAt": "2026-07-16T00:00:00.000Z",
+    "changes": [
+      "Added persisted release notes and upgrade summaries so users can see what changed after updating.",
+      "Added automatic version bumping and release-note preparation for publish builds.",
+      "Improved settings, graphics, timer ring, and shared UI styling polish."
+    ]
+  },
+  "releases": [
+    {
+      "version": "1.4.1",
+      "publishedAt": "2026-07-16T00:00:00.000Z",
+      "changes": [
+        "Added persisted release notes and upgrade summaries so users can see what changed after updating.",
+        "Added automatic version bumping and release-note preparation for publish builds.",
+        "Improved settings, graphics, timer ring, and shared UI styling polish."
+      ]
+    },
+    {
+      "version": "1.4.0",
+      "publishedAt": "2026-07-10T00:00:00.000Z",
+      "commit": "2af7c4f020eb5a19e8ac41c53cf7a3f4d3f08298",
+      "changes": [
+        "Added a getting started guide for first-time setup.",
+        "Added more timer ring graphics and display customization options.",
+        "Improved the install page and setup flow."
+      ]
+    },
+    {
+      "version": "1.2.0",
+      "publishedAt": "2026-07-05T00:00:00.000Z",
+      "commit": "f24b59d810c4f80ba1674fd556d4ff86e27aaf50",
+      "changes": [
+        "Moved notification delivery to a Cloudflare Worker for more reliable reminders.",
+        "Added notification settings, including the ability to turn notifications off.",
+        "Added the Version Update page and update-status checks."
+      ]
+    },
+    {
+      "version": "0.1.0",
+      "publishedAt": "2026-06-22T00:00:00.000Z",
+      "commit": "6c7804d022f7ced52407039de448b68d64dee59f",
+      "changes": [
+        "Built the core dosage timer experience.",
+        "Added session duration controls and a larger multi-dial panel layout.",
+        "Added persistent timer history and app state basics."
+      ]
+    }
+  ]
+}

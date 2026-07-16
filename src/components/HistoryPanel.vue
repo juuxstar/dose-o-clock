@@ -245,7 +245,7 @@ export default toNative(HistoryPanel);
 .history-reset-button {
 	width: 44px;
 	height: 38px;
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	background: color-mix(in srgb, var(--red), transparent 86%);
 	color: var(--red);
 }
@@ -277,7 +277,7 @@ export default toNative(HistoryPanel);
 .history-row-wrap {
 	position: relative;
 	overflow: hidden;
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	background: var(--tertiary-grouped-bg);
 }
 
@@ -286,7 +286,7 @@ export default toNative(HistoryPanel);
 	z-index: 2;
 	min-height: 54px;
 	grid-template-columns: 1fr auto 1fr;
-	border-radius: 8px;
+	border-radius: var(--radius-control);
 	background: var(--tertiary-grouped-bg);
 	padding: 0 14px;
 	transition: transform 180ms ease;

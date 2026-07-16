@@ -9,6 +9,7 @@ services:
       - dose_o_clock_node_modules:/app/node_modules
     environment:
       NODE_ENV: development
+      HOST_LAN_IP: ${HOST_LAN_IP:-}
       VITE_DEV_ORIGIN: ${VITE_DEV_ORIGIN:-https://dose-o-clock.dev.localhost:8888}
     expose:
       - "5175"

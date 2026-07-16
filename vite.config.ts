@@ -1,4 +1,6 @@
+import { execSync }                 from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
+import { networkInterfaces }        from 'node:os';
 import { fileURLToPath, URL }       from 'node:url';
 
 import vue                           from '@vitejs/plugin-vue';
@@ -9,6 +11,8 @@ const localTlsCertificatePath = fileURLToPath(new URL('./tomas.houseoftovig.com.
 const buildTimestamp          = new Date().toISOString();
 const appVersion              = JSON.parse(readFileSync(fileURLToPath(new URL('./package.json', import.meta.url)), 'utf8')).version as string;
 const devOrigin               = process.env.VITE_DEV_ORIGIN;
+const devServerPort           = 5175;
+const devProxyPort            = Number(process.env.HOST_LAN_PORT ?? 8888);
 
 export default defineConfig(({ command, mode }) => {
 	const useLocalHttps       = command === 'serve' && mode === 'development';
@@ -35,6 +39,7 @@ export default defineConfig(({ command, mode }) => {
 		plugins : [
 			vue(),
 			appVersionManifestPlugin(),
+			devNetworkUrlPlugin(devProxyPort, getDevNetworkProtocol(Boolean(localHttpsConfig))),
 			VitePWA({
 				cleanupOutdatedCaches : true,
 				injectRegister        : false,
@@ -79,14 +84,14 @@ export default defineConfig(({ command, mode }) => {
 		},
 		server : {
 			host       : '0.0.0.0',
-			port       : 5175,
+			port       : devServerPort,
 			strictPort : true,
 			https      : localHttpsConfig,
 			...(devOrigin ? { origin : devOrigin } : {}),
 		},
 		preview : {
 			host : '0.0.0.0',
-			port : 5175,
+			port : devServerPort,
 		},
 		test : {
 			environment : 'jsdom',
@@ -116,6 +121,92 @@ function appVersionManifestPlugin(): Plugin {
 	};
 }
 
+function devNetworkUrlPlugin(port: number, protocol: string): Plugin {
+	return {
+		name : 'dose-o-clock-dev-network-url',
+		configureServer(server) {
+			server.middlewares.use((request, response, next) => {
+				if (request.url?.startsWith('/dev-network-url')) {
+					response.setHeader('Cache-Control', 'no-store');
+					response.setHeader('Content-Type', 'application/json');
+					response.end(`${JSON.stringify({ url : getDevNetworkUrl(port, protocol) })}\n`);
+					return;
+				}
+
+				next();
+			});
+		},
+	};
+}
+
 function getAppVersionManifest(): string {
 	return `${JSON.stringify({ version : appVersion, buildTimestamp })}\n`;
+}
+
+function getDevNetworkUrl(port: number, protocol: string): string {
+	const host = getLocalNetworkAddress() ?? process.env.HOSTNAME ?? 'localhost';
+	return `${protocol}://${host}:${port}/`;
+}
+
+function getDevNetworkProtocol(useHttps: boolean): string {
+	if (devOrigin) {
+		return new URL(devOrigin).protocol.replace(':', '');
+	}
+
+	return useHttps ? 'https' : 'http';
+}
+
+function getLocalNetworkAddress(): string | null {
+	return getConfiguredLocalNetworkAddress()
+		?? getDefaultRouteLocalNetworkAddress()
+		?? getNetworkInterfaceLocalNetworkAddress();
+}
+
+function getConfiguredLocalNetworkAddress(): string | null {
+	const value = process.env.HOST_LAN_IP || process.env.VITE_HOST_LAN_IP;
+	return value && isLocalNetworkAddress(value) ? value : null;
+}
+
+function getDefaultRouteLocalNetworkAddress(): string | null {
+	const defaultInterface = runShell('route get default 2>/dev/null | awk \'/interface:/{print $2; exit}\'');
+
+	if (!defaultInterface) {
+		return null;
+	}
+
+	const address = runShell(`ipconfig getifaddr ${defaultInterface} 2>/dev/null`);
+	return address && isLocalNetworkAddress(address) ? address : null;
+}
+
+function getNetworkInterfaceLocalNetworkAddress(): string | null {
+	const candidates: string[] = [];
+
+	for (const [ name, addresses ] of Object.entries(networkInterfaces())) {
+		for (const address of addresses ?? []) {
+			if (address.family === 'IPv4' && !address.internal && isLocalNetworkAddress(address.address) && isPreferredLocalInterface(name)) {
+				candidates.push(address.address);
+			}
+		}
+	}
+
+	return candidates[0] ?? null;
+}
+
+function runShell(command: string): string | null {
+	try {
+		return execSync(command, { encoding : 'utf8' }).trim() || null;
+	}
+	catch {
+		return null;
+	}
+}
+
+function isPreferredLocalInterface(name: string): boolean {
+	return !/^(br-|bridge|docker|veth|utun|awdl|llw|lo|anpi|vmenet)/u.test(name);
+}
+
+function isLocalNetworkAddress(address: string): boolean {
+	return /^10\./u.test(address)
+		|| /^192\.168\.(?!64\.)/u.test(address)
+		|| /^172\.(1[6-9]|2\d|3[01])\./u.test(address);
 }

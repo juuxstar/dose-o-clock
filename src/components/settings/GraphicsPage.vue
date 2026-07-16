@@ -37,7 +37,7 @@ import { markRaw }                  from 'vue';
 import { Component, toNative, Vue } from 'vue-facing-decorator';
 
 import DialSelector                           from '@/components/widgets/DialSelector.vue';
-import type { TimerPosition, TimerRingShape } from '@/store/storage';
+import { type TimerPosition, TimerRingShape } from '@/store/storage';
 import { useTimerStore }                      from '@/store/useTimerStore';
 
 /**
@@ -89,16 +89,11 @@ const timerPositionOptions: TimerPositionOption[] = [
 	{ value : 1, label : 'Center', position : 'center' },
 ];
 
-const timerRingShapeOptions: TimerRingShapeOption[] = [
-	{ value : 0, label : 'Dots', shape : 'dots' },
-	{ value : 1, label : 'Darts', shape : 'darts' },
-	{ value : 2, label : 'Diamond', shape : 'diamond' },
-	{ value : 3, label : 'Bars', shape : 'bars' },
-	{ value : 4, label : 'Capsules', shape : 'capsules' },
-	{ value : 5, label : 'Ticks', shape : 'ticks' },
-	{ value : 6, label : 'Petals', shape : 'petals' },
-	{ value : 7, label : 'Minimal', shape : 'minimal' },
-];
+const timerRingShapeOptions: TimerRingShapeOption[] = Object.keys(TimerRingShape).map((key, value) => ({
+	value,
+	label : key,
+	shape : TimerRingShape[key as keyof typeof TimerRingShape],
+}));
 
 interface TimerPositionOption {
 	label: string;

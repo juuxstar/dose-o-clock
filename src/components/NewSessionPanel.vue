@@ -81,7 +81,7 @@ class NewSessionPanel extends Vue {
 
 	store         = markRaw(useTimerStore());
 	earlierValues = Array.from({ length : 19 }, (_, index) => index * 5);
-	durationValues = [ 45, 60, 75, 90 ];
+	durationValues = [ 45, 60, 75, 90, 105, 120 ];
 
 	localSelectedDosage          = this.store.defaultUnitHundredths.value;
 	localSelectedEarlierMinutes  = 0;

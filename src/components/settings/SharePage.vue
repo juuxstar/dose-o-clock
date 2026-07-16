@@ -1,6 +1,6 @@
 <template>
 	<div class="settings-page share-page u-grid u-gap-14 u-justify-items-center u-text-center">
-		<div class="share-qr-wrap" aria-label="QR code for https://dose-o-clock.tovig.ca">
+		<div class="share-qr-wrap u-grid u-place-center" aria-label="QR code for https://dose-o-clock.tovig.ca">
 			<svg
 				class="share-qr u-width-100"
 				viewBox="-4 -4 33 33"
@@ -78,8 +78,6 @@ export default toNative(SharePage);
 .share-qr-wrap {
 	width: min(72vw, 260px);
 	aspect-ratio: 1;
-	display: grid;
-	place-items: center;
 	border-radius: 50%;
 	background: #ffffff;
 	color: #000000;

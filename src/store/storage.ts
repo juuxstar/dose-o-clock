@@ -2,7 +2,18 @@ import { Dosage }       from '@/domain/Dosage';
 import { TimerSession } from '@/domain/TimerSession';
 
 export type TimerPosition = 'top' | 'center'
-export type TimerRingShape = 'dots' | 'darts' | 'diamond' | 'bars' | 'capsules' | 'ticks' | 'petals' | 'minimal'
+
+export enum TimerRingShape {
+	Dots     = 'dots',
+	Darts    = 'darts',
+	Diamond  = 'diamond',
+	Bars     = 'bars',
+	Capsules = 'capsules',
+	Ticks    = 'ticks',
+	Petals   = 'petals',
+	Minimal  = 'minimal',
+	Penises  = 'penises',
+}
 
 export interface PersistedState {
 	activeSession: TimerSession | null;
@@ -22,6 +33,8 @@ export const storageKeys = {
 	dosageIncrementHundredths : 'dose-o-clock.dosage-increment-hundredths',
 	timerPosition             : 'dose-o-clock.timer-position',
 	timerRingShape            : 'dose-o-clock.timer-ring-shape',
+	lastSeenBuild             : 'dose-o-clock.last-seen-build',
+	lastSeenVersion           : 'dose-o-clock.last-seen-version',
 } as const;
 
 export function loadState(now: Date = new Date()): PersistedState {
@@ -83,6 +96,14 @@ export function saveSetting(key: keyof typeof storageKeys, value: number | strin
 	localStorage.setItem(storageKeys[key], String(value));
 }
 
+export function loadString(key: keyof typeof storageKeys): string {
+	return localStorage.getItem(storageKeys[key]) ?? '';
+}
+
+export function saveString(key: keyof typeof storageKeys, value: string): void {
+	localStorage.setItem(storageKeys[key], value);
+}
+
 export function removeSessionData(): void {
 	localStorage.removeItem(storageKeys.activeSession);
 	localStorage.removeItem(storageKeys.history);
@@ -116,11 +137,11 @@ function readTimerPosition(): TimerPosition {
 
 function readTimerRingShape(): TimerRingShape {
 	const value = localStorage.getItem(storageKeys.timerRingShape);
-	return isTimerRingShape(value) ? value : 'dots';
+	return isTimerRingShape(value) ? value : TimerRingShape.Dots;
 }
 
 function isTimerRingShape(value: string | null): value is TimerRingShape {
-	return !!value && [ 'dots', 'darts', 'diamond', 'bars', 'capsules', 'ticks', 'petals', 'minimal' ].includes(value);
+	return !!value && Object.values(TimerRingShape).includes(value as TimerRingShape);
 }
 
 function readJson(raw: string | null): unknown {
