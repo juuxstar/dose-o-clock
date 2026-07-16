@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "dose-o-clock-notifications",
+	"name": "dose-o-clock",
 	"main": "worker/src/index.ts",
 	"compatibility_date": "2026-07-05",
 	"vars": {
