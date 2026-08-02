@@ -11,14 +11,15 @@ const manifest        = JSON.parse(readFileSync(manifestPath, 'utf8'));
 const packageJson     = JSON.parse(readFileSync(packagePath, 'utf8'));
 const currentVersion  = packageJson.version;
 const nextVersion     = getNextPatchVersion(currentVersion);
-const existingRelease = manifest.releases?.find(release => release.version === nextVersion);
+const releases        = manifest.releases ?? [];
+const existingRelease = releases.find(release => release.version === nextVersion);
 
 if (existingRelease?.changes?.length) {
 	console.log(`Release notes already exist for ${nextVersion}.`);
 	process.exit(0);
 }
 
-const suggestedChanges = getSuggestedChanges(manifest.latest);
+const suggestedChanges = getSuggestedChanges(releases[0]);
 
 if (!suggestedChanges.length) {
 	console.log(`No release notes found for ${nextVersion}, and there are no committed changes to summarize.`);
@@ -52,8 +53,7 @@ async function main() {
 		commit      : runGit([ 'rev-parse', 'HEAD' ]),
 		changes     : suggestedChanges,
 	};
-	const releases     = [ release, ...(manifest.releases ?? []).filter(candidate => candidate.version !== nextVersion) ];
-	const nextManifest = { latest : release, releases };
+	const nextManifest = { releases : [ release, ...releases.filter(candidate => candidate.version !== nextVersion) ] };
 
 	writeFileSync(manifestPath, `${JSON.stringify(nextManifest, null, 2)}\n`);
 	console.log(`Added release notes for ${nextVersion}.`);

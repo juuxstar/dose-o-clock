@@ -1,10 +1,10 @@
 {
   "name": "dose-o-clock",
-  "version": "1.4.0",
+  "version": "1.4.2",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --mode codex",
     "dev:http": "vite --mode codex",
     "dev:docker": "HOST_LAN_IP=$(ifconfig $(route -n get default | awk '/interface:/{print $2; exit}') | awk '/inet /{print $2; exit}') docker compose -f docker-compose.dev.yml up",
     "stop:dev:docker": "docker compose -f docker-compose.dev.yml down",

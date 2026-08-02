@@ -59,7 +59,7 @@ export default toNative(GettingStartedGuide);
 
 .guide-intro p {
 	color: var(--muted-text);
-	font-size: var(--font-size-body);
+	font-size: var(--font-size-display);
 	line-height: 1.35;
 }
 

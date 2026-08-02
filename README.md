@@ -49,12 +49,10 @@ npm run dev
 The Vite dev server is configured to run on:
 
 ```text
-https://localhost:5175
+http://localhost:5175
 ```
 
-If `tomas.houseoftovig.com.pem` exists locally, Vite uses it as both the HTTPS key and certificate. Because this is a local certificate, your browser may ask you to trust or accept it before loading the app.
-
-If the PEM file is missing, Vite starts without local HTTPS. This keeps CI and hosting builds, such as Cloudflare Pages, from failing when the local-only certificate is not available.
+The standard development command uses plain HTTP so it works consistently without a local TLS certificate.
 
 ## Run with the Local Proxy
 
@@ -146,7 +144,7 @@ The app is configured as a PWA through `vite-plugin-pwa`.
 ## Useful Scripts
 
 ```bash
-npm run dev      # Start the HTTPS Vite dev server
+npm run dev      # Start the HTTP Vite dev server
 npm run dev:docker # Start the HTTP Vite dev server behind Traefik
 npm run build    # Type-check and build for production
 npm run preview  # Serve the production build locally

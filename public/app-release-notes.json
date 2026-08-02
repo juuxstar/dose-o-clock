@@ -1,14 +1,15 @@
 {
-  "latest": {
-    "version": "1.4.1",
-    "publishedAt": "2026-07-16T00:00:00.000Z",
-    "changes": [
-      "Added persisted release notes and upgrade summaries so users can see what changed after updating.",
-      "Added automatic version bumping and release-note preparation for publish builds.",
-      "Improved settings, graphics, timer ring, and shared UI styling polish."
-    ]
-  },
   "releases": [
+    {
+      "version": "1.4.2",
+      "publishedAt": "2026-08-02T20:46:06.197Z",
+      "commit": "4c8dd8fdd3df52c2bb231c6707409ca8d0ea2bbf",
+      "changes": [
+        "Added a getting started guide for first-time setup.",
+        "Added more timer ring graphics and display customization options.",
+        "Improved the install page and setup flow."
+      ]
+    },
     {
       "version": "1.4.1",
       "publishedAt": "2026-07-16T00:00:00.000Z",

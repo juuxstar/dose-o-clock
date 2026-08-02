@@ -15,7 +15,7 @@ const commit           = process.env.GITHUB_SHA ?? runGit([ 'rev-parse', 'HEAD' 
 
 const release  = { version, publishedAt : new Date().toISOString(), commit, changes };
 const releases = [ release, ...existingManifest.releases.filter(candidate => candidate.version !== version) ];
-const manifest = { latest : release, releases };
+const manifest = { releases };
 
 mkdirSync(dirname(outputPath), { recursive : true });
 writeFileSync(outputPath, `${JSON.stringify(manifest, null, 2)}\n`);

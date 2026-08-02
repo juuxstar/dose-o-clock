@@ -17,11 +17,11 @@
 	--gray: #8e8e93;
 	--panel-shadow: rgba(0, 0, 0, 0.18);
 	--radius-control: 8px;
-	--font-size-xs: 12px;
-	--font-size-sm: 13px;
-	--font-size-body: 14px;
-	--font-size-title: 18px;
-	--font-size-display: 22px;
+	--font-size-xs: 0.75rem;
+	--font-size-sm: 0.8125rem;
+	--font-size-body: 1rem;
+	--font-size-title: 1.125rem;
+	--font-size-display: 1.375rem;
 }
 
 @media (prefers-color-scheme: dark) {

@@ -2,8 +2,10 @@
 	<div class="display-guide settings-page u-grid u-gap-12">
 		<section class="display-guide__intro u-grid u-gap-8">
 			<p class="u-margin-0">
-				The Display Options allow various customizations such as ring position and ring style, so you can move the timer
-				between the top and center of the screen and choose the ring style you like best.
+				You can move the timer between the top and center of the screen to suit the way you check it.
+			</p>
+			<p class="u-margin-0">
+				Choose the ring style you like best from the previews below. You'll find more ring styles in the Display setup.
 			</p>
 		</section>
 
